@@ -1,0 +1,18 @@
+{
+  "actual_game": {
+    "hold": "C",
+    "left": "LEFT",
+    "right": "RIGHT",
+    "down": "DOWN",
+    "drop": "SPACE",
+    "clockwise": "user-confirmed only"
+  },
+  "blox_reference": {
+    "reference_only": true,
+    "hold": "SHIFT",
+    "rotate180": "C",
+    "clockwise": "X",
+    "counterclockwise": "Z",
+    "note": "Blox reference data never changes actual_game input settings"
+  }
+}
