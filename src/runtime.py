@@ -10,7 +10,7 @@ from openers import load_book, opener_plan
 from detection import panel_occluded, fit_grid, refine_saved_regions
 from windows import shifted, same_size
 from telemetry import Telemetry
-from timing import MotionTracker, search_budget
+from timing import MotionTracker, search_budget, is_fresh
 
 
 def warm_search_worker(compile_openers=False):
@@ -532,7 +532,7 @@ class Session:
                     and o
                     and o.active
                     and job == self.signature(o, ctl.hold_used)
-                    and begin - o.captured < self.c.get("frame_age_ms", 200) / 1000
+                    and is_fresh(o, begin, self.c)
                     and begin - self.future_started < self.c.get("plan_age_ms", 500) / 1000
                 ):
                     packet["key"] = (o.board_key, o.active.kind, ctl.hold_used)
@@ -550,7 +550,7 @@ class Session:
                 and not self.warmup
                 and o
                 and o.valid
-                and begin - o.captured < self.c.get("frame_age_ms", 200) / 1000
+                and is_fresh(o, begin, self.c)
                 and self.previews_ready(o)
             ):
                 previews = self.c.get("preview_verified", False) or o.next_stable >= 3

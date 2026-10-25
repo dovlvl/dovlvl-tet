@@ -11,6 +11,7 @@ from windows import WindowSystem, shifted, same_size
 from input_win import WindowsBackend, KeyPulse
 from controller import AutoController
 from runtime import Session
+from timing import is_stale
 
 
 class App:
@@ -136,7 +137,7 @@ class App:
         if self.session.visibility_error:
             return
         o = self.session.observations.get()
-        if not o or not o.valid or time.monotonic() - o.captured > self.c.get("frame_age_ms", 200) / 1000:
+        if not o or not o.valid or is_stale(o, time.monotonic(), self.c):
             return
         if not o.hold.valid or o.hold_stable < 3 or not o.nexts or o.next_stable < 3:
             return

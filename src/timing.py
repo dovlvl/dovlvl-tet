@@ -6,6 +6,14 @@ from math import ceil
 from geometry import orientations, fits, advance, cellset
 
 
+def is_fresh(obs, now, c):
+    return now - obs.captured < c.get("frame_age_ms", 200) / 1000
+
+
+def is_stale(obs, now, c):
+    return now - obs.captured > c.get("frame_age_ms", 200) / 1000
+
+
 def drop_distance(board, kind, state):
     x, y, r = state
     p = orientations(kind)[r]

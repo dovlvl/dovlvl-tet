@@ -3,7 +3,7 @@
 import time, logging
 from geometry import advance, settle, orientations, cellset, hard_drop, kick_offsets
 from planner import route_to, landings, BudgetExpired
-from timing import route_feasible, timing_profile
+from timing import route_feasible, timing_profile, is_stale
 from scoring import ScoreState, award, tspin
 
 
@@ -171,10 +171,7 @@ class AutoController:
                 self.stop("게임 창 포커스 상실")
                 return
             invalid = (
-                obs is None
-                or now - obs.captured > self.c.get("frame_age_ms", 200) / 1000
-                or not obs.valid
-                or obs.confidence < self.c["confidence"]
+                obs is None or is_stale(obs, now, self.c) or not obs.valid or obs.confidence < self.c["confidence"]
             )
             recoverable = not self.diagnostic and not self.c.get("opener_enabled", False)
             if recoverable and invalid:
@@ -226,12 +223,7 @@ class AutoController:
                     reason = "RECOGNITION_ERROR: 홀드 키는 보냈으나 프리뷰 불확실 및 현재 블록의 명확한 교체 변화가 없어 성공 판정 불가"
                 self.stop(reason)
                 return
-            if (
-                obs is None
-                or now - obs.captured > self.c.get("frame_age_ms", 200) / 1000
-                or not obs.valid
-                or obs.confidence < self.c["confidence"]
-            ):
+            if obs is None or is_stale(obs, now, self.c) or not obs.valid or obs.confidence < self.c["confidence"]:
                 self.uncertain_since = self.uncertain_since or now
                 self.reason = (
                     obs.reason if obs and obs.reason else "RECOGNITION_ERROR: BOARD/현재 블록 불확실 또는 오래된 프레임"
@@ -630,7 +622,7 @@ class AutoController:
         )
 
     def begin_diagnostic(self, target, obs, action, now):
-        if not obs or not obs.valid or now - obs.captured > self.c.get("frame_age_ms", 200) / 1000 or action == "down":
+        if not obs or not obs.valid or is_stale(obs, now, self.c) or action == "down":
             self.start(target, now)
             self.diagnostic = True
             self.raw_diagnostic = (action, now)

@@ -41,7 +41,13 @@
   - 전체 테스트: 작업 전 153개 통과(46.769초), 최종 작업 후 153개 통과(43.822초, 종료 코드 0). 간헐 실패 없음. 포함된 골든 8개 모두 기존 스냅샷과 일치, 테스트·기대값·스냅샷 수정 없음.
   - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 빈 보드·전체 채움·각 단일 셀·고정 난수 보드 총 1,202개에서 기존 metrics·최대 높이·evaluate·position_score(0~4줄) 결과와 정확히 일치.
   - 전체 diff 자기 검토 완료. 인자·임계값·안전 조건·호출 순서·사용자 메시지 유지. 시작 검사 대상 파일 변경 없음. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b4/`. 다음 항목은 B5.
-- [ ] B5 — 프레임 신선도 헬퍼
+- [x] B5 — 프레임 신선도 헬퍼 — 2026-10-26 / 153→153 통과(간헐 실패 재실행 포함), 골든 일치
+  - `timing.is_fresh(obs, now, c)`의 엄격한 `<` 검사(runtime 2곳)와 `is_stale`의 엄격한 `>` 검사(controller 3곳, gui 1곳)를 별도 함수로 추출. 관측값 유무·valid·신뢰도·세대 검사의 위치와 단락 평가 순서 유지.
+  - `0 <= age < limit` 입력 가드, 입력 직전 밀리초 계산, 원시 캡처 타임스탬프 검사, 표시·추적용 별도 제한은 계산식과 경계가 달라 그대로 유지. `is_stale`을 `not is_fresh`로 바꾸지 않아 경계값·NaN 처리도 유지.
+  - 전체 테스트: 작업 전 153개 통과(45.278초). 작업 후 전체 153개 중 149개 통과, 시간 의존 4개 간헐 실패(90.976초). 실패한 4개만 1차 재실행하여 3개 통과(31.086초); 남은 오프너 파이프라인 1개는 2차 재실행 통과(7블록 확인, 7.391초). 제한 시간·기대값 수정 없음. 기존 골든 8개 모두 일치, 테스트·스냅샷 변경 없음.
+  - 간헐 실패: `test_desktop`의 `test_diagnostic_api_success_without_change_fails`, `test_diagnostic_left_waits_for_screen_ack`, `test_previews_openers`의 `test_opener_runtime_pipeline_seven_simulated_blocks`, `test_strategy`의 `test_auto_runtime_finishes_opener_and_keeps_playing`. 작업 전 main 기준 검사는 모두 통과했음.
+  - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 4개 변경 모듈에서 헬퍼 6회 호출을 원래 식으로 펼친 AST 전체가 main과 동일. 경계 직전·동일·직후, 미래 시각, 기본/명시 설정, 무한대·NaN 등 32개 경계 검사 통과.
+  - 전체 diff 자기 검토 완료: 안전 조건·키 해제·호출 순서·사용자 메시지 유지. Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b5/`. 다음 항목은 B6.
 - [ ] B6 — 검증 플래그 리셋 헬퍼
 - [ ] B7 — 영역 나열 헬퍼
 - [ ] B8 — paths.py 경로 헬퍼
