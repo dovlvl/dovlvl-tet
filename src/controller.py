@@ -1,7 +1,7 @@
 """Closed-loop controller: one acknowledged action at a time."""
 
 import time, logging
-from geometry import advance, settle, orientations, fits, cellset, IKICKS, JLSTZ
+from geometry import advance, settle, orientations, cellset, IKICKS, JLSTZ, hard_drop
 from planner import route_to, landings, BudgetExpired
 from timing import route_feasible, timing_profile
 from scoring import ScoreState, award, tspin
@@ -313,8 +313,7 @@ class AutoController:
                     if state is not None:
                         x, y, r = state
                         p = orientations(obs.active.kind)[r]
-                        while fits(obs.fixed, p, x, y + 1):
-                            y += 1
+                        y = hard_drop(obs.fixed, p, x, y)
                         if cellset(obs.active.kind, (x, y, r)) == frozenset(map(tuple, self.plan["cells"])):
                             path = proposal
                 self.plan.pop("path", None)
@@ -370,8 +369,7 @@ class AutoController:
         if action == "drop" and self.plan and "expected_after" in self.plan:
             x, y, r = obs.active.state
             p = orientations(obs.active.kind)[r]
-            while fits(obs.fixed, p, x, y + 1):
-                y += 1
+            y = hard_drop(obs.fixed, p, x, y)
             expected = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
             if expected != tuple(tuple(row) for row in self.plan["expected_after"]):
                 self.stop("OPENER_BOARD_ERROR: 예상 고정 보드 불일치")
@@ -415,8 +413,7 @@ class AutoController:
         if action == "drop":
             x, y, r = obs.active.state
             p = orientations(obs.active.kind)[r]
-            while fits(obs.fixed, p, x, y + 1):
-                y += 1
+            y = hard_drop(obs.fixed, p, x, y)
             wait["expected_board"] = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
             self.phase = "WAIT_DROP"
             wait["score_spin"] = tspin(

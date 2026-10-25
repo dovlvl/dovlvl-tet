@@ -3,7 +3,7 @@
 from collections import deque
 from functools import lru_cache
 from time import perf_counter
-from geometry import orientations, advance, fits, settle, evaluate, IKICKS, JLSTZ, cellset
+from geometry import orientations, advance, fits, settle, evaluate, IKICKS, JLSTZ, cellset, hard_drop
 from scoring import tspin, award, ScoreState, SITE_RULES
 from dataclasses import asdict
 
@@ -123,8 +123,7 @@ def _route(board, kind, start, target, rotation, counterclockwise):
         state, path = q.popleft()
         x, y, r = state
         p = orientations(kind)[r]
-        while fits(board, p, x, y + 1):
-            y += 1
+        y = hard_drop(board, p, x, y)
         if cellset(kind, (x, y, r)) == dest:
             return path + ("drop",)
         for action in actions:
@@ -178,8 +177,7 @@ def basic_candidates(
                 continue
             x, y, r = state
             p = orientations(kind)[r]
-            while fits(board, p, x, y + 1):
-                y += 1
+            y = hard_drop(board, p, x, y)
             cells = cellset(kind, (x, y, r))
             path += ("drop",)
             if cells in results:
@@ -343,8 +341,7 @@ def plan(
     best = None
     if not timing and fits(board, orientations(kind)[start[2]], *start[:2]):
         x, y, r = start
-        while fits(board, orientations(kind)[r], x, y + 1):
-            y += 1
+        y = hard_drop(board, orientations(kind)[r], x, y)
         b, l = settle(board, orientations(kind)[r], x, y)
         best = dict(
             kind=kind,

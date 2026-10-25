@@ -5,7 +5,7 @@ from functools import lru_cache
 from dataclasses import replace
 import numpy as np
 from model import Active, Reading, Observation
-from geometry import SHAPES, orientations, fits, settle
+from geometry import SHAPES, orientations, fits, settle, hard_drop
 from geometry import cellset as cellset
 from piece_library import hue_centers, shape_rotations
 
@@ -287,8 +287,7 @@ def _lock_successors(board, kind, state=None):
         p = orientations(kind)[r]
         if not fits(board, p, x, y):
             continue
-        while fits(board, p, x, y + 1):
-            y += 1
+        y = hard_drop(board, p, x, y)
         b, _ = settle([list(row) for row in board], p, x, y)
         key = tuple(map(tuple, b))
         result[key] = {(xx, yy) for yy, row in enumerate(b) for xx, v in enumerate(row) if v}
@@ -486,8 +485,7 @@ class Recognizer:
                 for x, y in gc:
                     trial[y][x] = 0
                 xx, yy, rr = st
-                while fits(trial, orientations(kind)[rr], xx, yy + 1):
-                    yy += 1
+                yy = hard_drop(trial, orientations(kind)[rr], xx, yy)
                 if cellset(kind, (xx, yy, rr)) != gc:
                     continue
                 if config.get("filled_ghost_verified", False):

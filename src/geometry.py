@@ -33,6 +33,12 @@ def fits(board, p, x, y):
     return all(0 <= x + a < 10 and 0 <= y + b < 20 and not board[y + b][x + a] for a, b in p)
 
 
+def hard_drop(board, p, x, y):
+    while fits(board, p, x, y + 1):
+        y += 1
+    return y
+
+
 def settle(board, p, x, y):
     b = [r[:] for r in board]
     for a, c in p:
