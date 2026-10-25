@@ -1,52 +1,106 @@
 """Generate an evidence-based report from completed JSON comparisons."""
-import json,re,hashlib,statistics
+
+import json, re, hashlib, statistics
 from pathlib import Path
-ROOT=Path(__file__).resolve().parents[1]
 
-def read(name):return json.loads((ROOT/'diagnostics'/name).read_text(encoding='utf-8'))
-def combine(prefix,index=0):
-    runs=[read(f'{prefix}_common_{i}.json')['pipelines'][index] for i in (1,2)]
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def read(name):
+    return json.loads((ROOT / "diagnostics" / name).read_text(encoding="utf-8"))
+
+
+def combine(prefix, index=0):
+    runs = [read(f"{prefix}_common_{i}.json")["pipelines"][index] for i in (1, 2)]
+
     def metric(name):
-        entries=[p['telemetry']['metrics'].get(name,{'n':0,'mean':0}) for p in runs]
-        return sum(e['mean']*e['n'] for e in entries)/max(1,sum(e['n'] for e in entries))
-    return dict(confirmed=sum(p['confirmed'] for p in runs),seconds=sum(p['seconds'] for p in runs),
-                pps=sum(p['confirmed'] for p in runs)/sum(p['seconds'] for p in runs),
-                pps_range=[min(p['pps'] for p in runs),max(p['pps'] for p in runs)],
-                capture_ms=metric('capture_grab_ms'),recognition_ms=metric('recognition_ms'),search_ms=metric('search_ms'),
-                search_roundtrip_ms=metric('search_roundtrip_ms'),input_ack_ms=metric('input_ack_ms'),drop_ack_ms=metric('drop_ack_ms'),
-                block_ms=metric('block_ms'),valid=sum(p['recognition_ground_truth']['valid'] for p in runs),
-                wrong_valid=sum(p['recognition_ground_truth']['wrong_valid'] for p in runs),
-                total=sum(p['recognition_ground_truth']['total'] for p in runs),
-                target_success=sum(p['target_success'] for p in runs),target_attempts=sum(p['target_attempts'] for p in runs),
-                pc_success=sum(p['pc_success'] for p in runs),errors=[p['error'] for p in runs if p['error']])
+        entries = [p["telemetry"]["metrics"].get(name, {"n": 0, "mean": 0}) for p in runs]
+        return sum(e["mean"] * e["n"] for e in entries) / max(1, sum(e["n"] for e in entries))
 
-if __name__=='__main__':
-    before,after=combine('before'),combine('after')
-    pc_before,pc_after=combine('before',1),combine('after',1)
-    micro_before,micro_after=read('recognition_before.json'),read('recognition_after.json')
-    fast=read('after_fast.json')['pipelines'][0]
-    scores_before,scores_after=read('score_before.json'),read('score_after.json')
-    testbytes=(ROOT/'test_latest_results.txt').read_bytes()
-    testlog=testbytes.decode('utf-16' if testbytes.startswith((b'\xff\xfe',b'\xfe\xff')) else 'utf-8',errors='replace')
-    test_match=re.search(r'Ran (\d+) tests in ([\d.]+)s',testlog)
-    assert test_match and '\nOK\n' in testlog.replace('\r','') and not re.search(r'^FAILED',testlog,re.M)
-    report=dict(kind='synthetic_RGB_and_real_clock_mock',real_windows_game=dict(tested=False,actual_pps=None,actual_score=None,
-                spin_judgment_verified=False,lock_rules_verified=False,combo_bonus_verified=False,pc_bonus_verified=False),
-                before=before,after=after,pc_before=pc_before,pc_after=pc_after,recognition_before=micro_before,recognition_after=micro_after,
-                fast_input=fast,tests=int(test_match[1]),test_seconds=float(test_match[2]),
-                baseline_data_identical=True,common_input=dict(press_ms=35,gap_ms=35,capture_fps=60,vision_fps=60,configured_budget_ms=160),
-                new_effective_realtime_cap_ms=60,source_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT/'src').glob('*.py')})
-    (ROOT/'diagnostics/revision_summary.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8')
-    rows=[]
-    for label,key in [('캡처/캡처원 처리','capture_ms'),('인식','recognition_ms'),('탐색 자체','search_ms'),('탐색 왕복','search_roundtrip_ms'),('입력→실제 화면 확인','input_ack_ms'),('드롭→다음 상태 확인','drop_ack_ms'),('블록 전체 처리','block_ms')]:
+    return dict(
+        confirmed=sum(p["confirmed"] for p in runs),
+        seconds=sum(p["seconds"] for p in runs),
+        pps=sum(p["confirmed"] for p in runs) / sum(p["seconds"] for p in runs),
+        pps_range=[min(p["pps"] for p in runs), max(p["pps"] for p in runs)],
+        capture_ms=metric("capture_grab_ms"),
+        recognition_ms=metric("recognition_ms"),
+        search_ms=metric("search_ms"),
+        search_roundtrip_ms=metric("search_roundtrip_ms"),
+        input_ack_ms=metric("input_ack_ms"),
+        drop_ack_ms=metric("drop_ack_ms"),
+        block_ms=metric("block_ms"),
+        valid=sum(p["recognition_ground_truth"]["valid"] for p in runs),
+        wrong_valid=sum(p["recognition_ground_truth"]["wrong_valid"] for p in runs),
+        total=sum(p["recognition_ground_truth"]["total"] for p in runs),
+        target_success=sum(p["target_success"] for p in runs),
+        target_attempts=sum(p["target_attempts"] for p in runs),
+        pc_success=sum(p["pc_success"] for p in runs),
+        errors=[p["error"] for p in runs if p["error"]],
+    )
+
+
+if __name__ == "__main__":
+    before, after = combine("before"), combine("after")
+    pc_before, pc_after = combine("before", 1), combine("after", 1)
+    micro_before, micro_after = read("recognition_before.json"), read("recognition_after.json")
+    fast = read("after_fast.json")["pipelines"][0]
+    scores_before, scores_after = read("score_before.json"), read("score_after.json")
+    testbytes = (ROOT / "test_latest_results.txt").read_bytes()
+    testlog = testbytes.decode(
+        "utf-16" if testbytes.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8", errors="replace"
+    )
+    test_match = re.search(r"Ran (\d+) tests in ([\d.]+)s", testlog)
+    assert test_match and "\nOK\n" in testlog.replace("\r", "") and not re.search(r"^FAILED", testlog, re.M)
+    report = dict(
+        kind="synthetic_RGB_and_real_clock_mock",
+        real_windows_game=dict(
+            tested=False,
+            actual_pps=None,
+            actual_score=None,
+            spin_judgment_verified=False,
+            lock_rules_verified=False,
+            combo_bonus_verified=False,
+            pc_bonus_verified=False,
+        ),
+        before=before,
+        after=after,
+        pc_before=pc_before,
+        pc_after=pc_after,
+        recognition_before=micro_before,
+        recognition_after=micro_after,
+        fast_input=fast,
+        tests=int(test_match[1]),
+        test_seconds=float(test_match[2]),
+        baseline_data_identical=True,
+        common_input=dict(press_ms=35, gap_ms=35, capture_fps=60, vision_fps=60, configured_budget_ms=160),
+        new_effective_realtime_cap_ms=60,
+        source_sha256={p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (ROOT / "src").glob("*.py")},
+    )
+    (ROOT / "diagnostics/revision_summary.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    rows = []
+    for label, key in [
+        ("캡처/캡처원 처리", "capture_ms"),
+        ("인식", "recognition_ms"),
+        ("탐색 자체", "search_ms"),
+        ("탐색 왕복", "search_roundtrip_ms"),
+        ("입력→실제 화면 확인", "input_ack_ms"),
+        ("드롭→다음 상태 확인", "drop_ack_ms"),
+        ("블록 전체 처리", "block_ms"),
+    ]:
         rows.append(f"| {label} | {before[key]:.2f} | {after[key]:.2f} |")
-    score_rows=[]
-    for old,new in zip(scores_before['cases'],scores_after['cases']):
+    score_rows = []
+    for old, new in zip(scores_before["cases"], scores_after["cases"]):
+
         def val(p):
-            e=p['independent_model_projection'] or {}
-            return f"{(p['chosen'] or {}).get('lines','?')}줄 / {e.get('spin','?')} / {e.get('expected_points','?')}"
-        score_rows.append(f"| {new['name']} | {val(old)} | {val(new)} | {'예' if new['route_replayed'] else '아니오'} |")
-    text=f'''# 분석·수정·검증 보고서
+            e = p["independent_model_projection"] or {}
+            return f"{(p['chosen'] or {}).get('lines', '?')}줄 / {e.get('spin', '?')} / {e.get('expected_points', '?')}"
+
+        score_rows.append(
+            f"| {new['name']} | {val(old)} | {val(new)} | {'예' if new['route_replayed'] else '아니오'} |"
+        )
+    text = f"""# 분석·수정·검증 보고서
 
 ## 실제 원인과 변경 파일
 
@@ -68,13 +122,13 @@ if __name__=='__main__':
 |---|---:|---:|
 {chr(10).join(rows)}
 
-- 수정 전 확인된 배치: {before['confirmed']}개 / {before['seconds']:.3f}초, 합산 {before['pps']:.3f} PPS (실행별 {before['pps_range'][0]:.3f}~{before['pps_range'][1]:.3f}).
-- 수정 후 확인된 배치: {after['confirmed']}개 / {after['seconds']:.3f}초, 합산 {after['pps']:.3f} PPS (실행별 {after['pps_range'][0]:.3f}~{after['pps_range'][1]:.3f}).
-- 유효 판독 중 오판: 전 {before['wrong_valid']}/{before['valid']}, 후 {after['wrong_valid']}/{after['valid']}. 전체 프레임 수 전 {before['total']}, 후 {after['total']}; 나머지는 시작/전환/불확실을 포함한다. 유효 판독 정확도를 전체 프레임 검출률로 부르지 않는다.
-- 계산한 위치 도달: 전 {before['target_success']}/{before['target_attempts']}, 후 {after['target_success']}/{after['target_attempts']}.
-- 두 O를 사용하는 별도 PC 시나리오: 전 {pc_before['pc_success']}/2, 후 {pc_after['pc_success']}/2회 PC 확인.
-- 준비된 동일 RGB 240프레임: 평균 {micro_before['mean_ms']:.3f}→{micro_after['mean_ms']:.3f}ms, p95 {micro_before['p95_ms']:.3f}→{micro_after['p95_ms']:.3f}ms. 양쪽 유효 240/240, 오판 0. 렌더링·시작 비용은 이 수치에서 제외했다.
-- 별도 빠른 입력 20/15ms 시험: {fast['confirmed']}개 / {fast['seconds']:.3f}초 = {fast['pps']:.3f} PPS. 이는 입력 시간이 다른 조건이다. 같은 조건의 비교와 섞지 않는다.
+- 수정 전 확인된 배치: {before["confirmed"]}개 / {before["seconds"]:.3f}초, 합산 {before["pps"]:.3f} PPS (실행별 {before["pps_range"][0]:.3f}~{before["pps_range"][1]:.3f}).
+- 수정 후 확인된 배치: {after["confirmed"]}개 / {after["seconds"]:.3f}초, 합산 {after["pps"]:.3f} PPS (실행별 {after["pps_range"][0]:.3f}~{after["pps_range"][1]:.3f}).
+- 유효 판독 중 오판: 전 {before["wrong_valid"]}/{before["valid"]}, 후 {after["wrong_valid"]}/{after["valid"]}. 전체 프레임 수 전 {before["total"]}, 후 {after["total"]}; 나머지는 시작/전환/불확실을 포함한다. 유효 판독 정확도를 전체 프레임 검출률로 부르지 않는다.
+- 계산한 위치 도달: 전 {before["target_success"]}/{before["target_attempts"]}, 후 {after["target_success"]}/{after["target_attempts"]}.
+- 두 O를 사용하는 별도 PC 시나리오: 전 {pc_before["pc_success"]}/2, 후 {pc_after["pc_success"]}/2회 PC 확인.
+- 준비된 동일 RGB 240프레임: 평균 {micro_before["mean_ms"]:.3f}→{micro_after["mean_ms"]:.3f}ms, p95 {micro_before["p95_ms"]:.3f}→{micro_after["p95_ms"]:.3f}ms. 양쪽 유효 240/240, 오판 0. 렌더링·시작 비용은 이 수치에서 제외했다.
+- 별도 빠른 입력 20/15ms 시험: {fast["confirmed"]}개 / {fast["seconds"]:.3f}초 = {fast["pps"]:.3f} PPS. 이는 입력 시간이 다른 조건이다. 같은 조건의 비교와 섞지 않는다.
 
 실행 시간은 운영체제 스케줄링과 경로 선택에 따라 달라진다. 일반적인 최대 PPS나 실제 게임 PPS를 보장하지 않는다. 원시 JSON과 전체 보드·큐는 `diagnostics/`에 포함했다.
 
@@ -90,7 +144,7 @@ if __name__=='__main__':
 
 ## 테스트·빌드·실게임 구분
 
-- 전체 unittest: {report['tests']}개 통과 ({report['test_seconds']:.3f}초). 빈 드롭 전환·줄 삭제·다음 블록 재인식·연속 Auto, 오래된 계획/입력 거부, 회전/HOLD, T스핀 모서리/마지막 회전, PC의 보드 완전 비움, B2B 이력 등을 포함한다.
+- 전체 unittest: {report["tests"]}개 통과 ({report["test_seconds"]:.3f}초). 빈 드롭 전환·줄 삭제·다음 블록 재인식·연속 Auto, 오래된 계획/입력 거부, 회전/HOLD, T스핀 모서리/마지막 회전, PC의 보드 완전 비움, B2B 이력 등을 포함한다.
 - GUI 검사: 메인에 버튼 4개 + 상태 한 줄만 있는지, 설정·진단이 별도 창인지, 모의 백엔드에 실제 입력을 보내지 않는지 확인했다.
 - EXE 빌드 후 Tcl/Tk 포함·실제 GUI 시작 검사·현재 소스와 내장 모듈 일치 결과는 별도 `exe_startup_highspeed.json`, `embedded_source_check.json`을 제공한다.
 - **실제 Windows 테트리스 연속 Auto PPS·실제 점수 변화·현재 게임 T스핀/미니/PC/콤보 판정·고정 시간 일치는 미검증**이다. 실제 점수를 측정한 것처럼 모의 수치를 제시하지 않는다.
@@ -102,6 +156,6 @@ if __name__=='__main__':
 `tools/run_revision_benchmarks.py`는 비교를 순차 실행한다. 별도 `score_before/after.json`에 동일 보드와 경로가 모두 남는다. `tools/benchmark_recognition.py`는 준비된 RGB만 측정한다. 실제 Windows 게임 기록은 사용자가 설정의 로그·진단 캡처 저장으로 남길 수 있다.
 
 기준 자료: [요청한 글](https://hse30.tistory.com/73), [공식 게임 점수·키 표](https://play.tetris.com/games/). 세부 출처는 자료 문서에 연결했다.
-'''
-    (ROOT/'docs/VALIDATION_REPORT_KO.md').write_text(text,encoding='utf-8')
-    print(json.dumps(dict(before_pps=before['pps'],after_pps=after['pps'],tests=report['tests'],real_game=False)))
+"""
+    (ROOT / "docs/VALIDATION_REPORT_KO.md").write_text(text, encoding="utf-8")
+    print(json.dumps(dict(before_pps=before["pps"], after_pps=after["pps"], tests=report["tests"], real_game=False)))

@@ -1,0 +1,10 @@
+[tool.ruff]
+required-version = "==0.14.2"
+target-version = "py312"
+line-length = 120
+cache-dir = "diagnostics/ruff-cache"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
