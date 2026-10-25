@@ -14,6 +14,13 @@ from runtime import Session
 from timing import is_stale
 
 
+def reset_verification(c, *, reset_preview=True):
+    if reset_preview:
+        c.update(preview_verified=False, basic_auto_verified=False, opener_enabled=False)
+    else:
+        c.update(basic_auto_verified=False, opener_enabled=False)
+
+
 class App:
     def __init__(self, root, launch_game=False):
         self.auto_connect = False
@@ -168,7 +175,7 @@ class App:
         info = self.candidates[self.combo.current()]
         self.c["target"] = info
         self.c["client"] = info["client"]
-        self.c.update(preview_verified=False, basic_auto_verified=False, opener_enabled=False)
+        reset_verification(self.c)
         self.c["board"] = None
         self.c["hold"] = None
         self.c["next_slots"] = [None] * self.c.get("next_default_count", 1)
@@ -282,7 +289,7 @@ class App:
                 if self.c.get("target", {}).get("hwnd") != info["hwnd"] or any(
                     self.c[k] != result[k] for k in ("board", "hold", "next_slots")
                 ):
-                    self.c.update(preview_verified=False, basic_auto_verified=False, opener_enabled=False)
+                    reset_verification(self.c)
                 self.update_targets()
                 self.combo.current(next(i for i, z in enumerate(self.candidates) if z["hwnd"] == info["hwnd"]))
                 self.c["target"] = info
@@ -520,7 +527,7 @@ class App:
             if commit:
                 try:
                     if any(draft[k] != self.c[k] for k in ("board", "hold", "next_slots")):
-                        draft.update(preview_verified=False, basic_auto_verified=False, opener_enabled=False)
+                        reset_verification(draft)
                     validate(draft, True)
                     self.c = draft
                     self.c["client"] = self.ws.info(self.c["target"]["hwnd"])["client"]
@@ -757,9 +764,9 @@ class App:
                 c["lock_delay_verified"] = lock_verified.get()
                 c["auto_start_on_launch"] = auto_launch.get()
                 if any(c[k] != self.c[k] for k in ("min_s", "min_v")):
-                    c.update(preview_verified=False, basic_auto_verified=False, opener_enabled=False)
+                    reset_verification(c)
                 if c["keys"] != self.c["keys"] or c["rotation_confirmed"] != self.c["rotation_confirmed"]:
-                    c.update(basic_auto_verified=False, opener_enabled=False)
+                    reset_verification(c, reset_preview=False)
                 validate(c)
                 save(c)
                 self.c = c

@@ -48,7 +48,12 @@
   - 간헐 실패: `test_desktop`의 `test_diagnostic_api_success_without_change_fails`, `test_diagnostic_left_waits_for_screen_ack`, `test_previews_openers`의 `test_opener_runtime_pipeline_seven_simulated_blocks`, `test_strategy`의 `test_auto_runtime_finishes_opener_and_keeps_playing`. 작업 전 main 기준 검사는 모두 통과했음.
   - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 4개 변경 모듈에서 헬퍼 6회 호출을 원래 식으로 펼친 AST 전체가 main과 동일. 경계 직전·동일·직후, 미래 시각, 기본/명시 설정, 무한대·NaN 등 32개 경계 검사 통과.
   - 전체 diff 자기 검토 완료: 안전 조건·키 해제·호출 순서·사용자 메시지 유지. Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b5/`. 다음 항목은 B6.
-- [ ] B6 — 검증 플래그 리셋 헬퍼
+- [x] B6 — 검증 플래그 리셋 헬퍼 — 2026-10-26 / 153→153 통과(간헐 실패 재실행 포함), 골든 일치
+  - gui의 독립적인 리셋 5곳을 `reset_verification(c, *, reset_preview=True)`로 추출. 4곳의 preview/basic/opener 3개 초기화와 키·회전 변경 시 basic/opener 2개만 초기화를 별도 분기로 보존. 원래 설정 객체에 한 번의 `update`로 같은 순서로 적용.
+  - 게임 열기의 영역 설정과 결합된 update 및 빌드 가져오기의 opener 단독 해제는 그대로 유지. `rotation_confirmed`와 각 위치의 조건·호출 순서·저장·검증 절차 및 사용자 메시지 변경 없음.
+  - 전체 테스트: 작업 전 153개 중 152개 통과(68.629초), 시간 의존 `test_strategy.AdaptiveAutoTests.test_tetris_and_perfect_clear_take_priority`는 1차 단독 재실행 통과(0.090초). 작업 후 153개 중 152개 통과(73.675초), 시간 의존 `test_session.PipelineTests.test_board_only_pipeline_places_five_simulated_blocks`는 1차 단독 재실행 통과(3.904초, 5블록 확인). 두 간헐 실패는 서로 다른 테스트이며 제한 시간·기대값 수정 없음.
+  - 기존 골든 8개 모두 일치, 테스트·스냅샷 변경 없음. Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 헬퍼 호출 5곳을 원래 코드로 펼친 gui 전체 AST가 main과 동일. 누락/false/true 설정을 조합한 162개 사례에서 값·키 삽입 순서·update 횟수·비대상 값 유지 확인.
+  - 전체 diff 자기 검토 완료: 검증 게이트·안전 조건·키 해제·호출 순서 유지. Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b6/`. 다음 항목은 B7.
 - [ ] B7 — 영역 나열 헬퍼
 - [ ] B8 — paths.py 경로 헬퍼
 - [ ] B9 — 설정값 c[k]로 통일
