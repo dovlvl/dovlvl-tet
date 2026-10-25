@@ -71,6 +71,18 @@
 |---|------|
 | T1 | 테스트의 `sys.path.insert` 일원화(`tests/__init__.py` 또는 공용 부트스트랩). `test_drop_transition`이 쓰는 `test_session.Source`를 `helpers.py`로 이동. 테스트 수는 그대로여야 함 |
 | T2 | `pyinstaller`, `ruff`를 `requirements-dev.txt`로 분리하고 `build_windows.bat`이 둘 다 설치하도록 수정. Python 버전 문구 통일 (`build_windows.bat` "3.11+" → README의 3.12 기준) |
+| T3 | 안 쓰는 추적 파일 정리. 아래 삭제·유지 목록과 사용 여부 확인 절차를 따른다. |
+
+#### T3 — 안 쓰는 추적 파일 정리 (T2 다음, 단계 C 전)
+
+- 삭제 후보는 다음 파일로 한정하며, 사용 여부 확인을 통과한 파일만 `git rm`한다.
+  - `tools/`의 일회성 도구 12개: `benchmark_auto.py`, `benchmark_highspeed.py`, `benchmark_recognition.py`, `compare_score_policy.py`, `diagnose_tcl.py`, `gui_auto_smoke.py`, `inspect_official_rules.py`, `package_release.py`, `preview_compare.py`, `replay_tracking.py`, `run_revision_benchmarks.py`, `write_revision_report.py`.
+  - `data/site_profiles.json` (코드에서 읽지 않는 데이터 파일). `config.py`의 `site_profile` 설정 키는 유지한다.
+  - 지난 작업 보고서: `PROJECT_STATUS.md`, `docs/VALIDATION_REPORT_KO.md`, `docs/DROP_TRANSITION_FIX_KO.md`.
+- 절대 삭제 금지: `tools/build_exe.py`, `tools/verify_embedded_source.py`, `tools/import_piece_captures.py`, `tests/` 전체(`legacy_preview_reference.py` 포함), `src/` 전체, `data/`의 나머지 전부, 골든 스냅샷.
+- 삭제 전에 각 삭제 후보 이름이 `src/`, `tests/`, 남는 `tools/`, `build_windows.bat`, `run_windows.bat`에서 import되거나 실행되는지 검색한다. 쓰이는 곳이 하나라도 있으면 해당 파일은 삭제하지 않고 진행 문서에 유지 이유를 적는다.
+- 삭제한 파일을 언급하는 문서(`README.md`, `docs/START_HERE_KO.md`, `docs/RELEASE_POLICY.md` 등)는 해당 문장만 고치거나 지운다. 프로그램 사용법 설명은 바꾸지 않는다.
+- 다른 항목의 검증 게이트를 모두 적용한다. 전체 테스트 통과 수 유지, 기존 골든 스냅샷 일치, Ruff 검사를 확인하고, 시작 검사도 반드시 실행해 `started=true`, `auto_running=false`를 확인한다.
 
 ### 단계 C — 구조 개선
 
@@ -102,3 +114,25 @@
 - F3: `gui.render`와 `_render_diagnostics`가 설정 파일을 중복 저장
 - F4: `recognition.py` `components(grid)` 두 번 계산 후 첫 결과 폐기 (의도 불명)
 - F5: `strategy.builtin_book` 원본 변형 이중 컴파일
+
+### Z — 로컬 예전 배포본·진단 파일 정리 (D5와 F 다음, 맨 마지막)
+
+git에 올라가지 않은 로컬 파일만 대상으로 한다. 삭제하면 복구할 수 없으므로 아래 목록에 해당하는 것만 지운다.
+
+- 저장소 폴더 안의 `release/` 폴더 전체.
+- 저장소 폴더 안의 모든 `*.zip`, `*.zip.sha256` 파일.
+- `diagnostics/` 폴더 전체(리팩토링 검증 로그 포함).
+- `dist/` 안에서 `TetrisAuto.exe`를 제외한 나머지 전부.
+- `build/` 폴더와 `*.spec` 파일.
+
+절대 건드리지 않는 것: `.venv/`, `dist/TetrisAuto.exe`, git에 추적되는 모든 파일, 저장소 폴더 밖의 모든 파일(`%USERPROFILE%\.tetris_trainer` 설정 포함). 위 삭제 목록보다 이 보호 규칙을 우선한다. 폴더 안에 추적 파일이 있으면 해당 파일을 보존한다. 삭제 전 실제 절대 경로가 저장소 안인지 확인하며, 저장소 밖을 가리키는 링크를 따라가지 않는다.
+
+순서는 다음과 같다.
+
+1. 지울 목록과 항목별·전체 용량을 진행 문서에 기록한다.
+2. 기록한 대상만 삭제한다.
+3. 진행 문서의 예정된 기록 변경을 제외하고 `git status`가 깨끗하며, 삭제로 인해 추적 파일이 하나도 바뀌지 않았는지 확인한다.
+4. 전체 테스트와 시작 검사를 다시 실행해 통과를 확인한다(`started=true`, `auto_running=false`).
+5. 진행 문서에 `[x]`와 실제 확보한 용량을 기록하고 커밋·push한다. 재검증으로 다시 생긴 파일이 있으면 확보 용량에 반영한다.
+
+이 항목은 코드 변경이 없으므로 브랜치 없이 `main`에서 진행 문서 기록만 커밋해도 된다.
