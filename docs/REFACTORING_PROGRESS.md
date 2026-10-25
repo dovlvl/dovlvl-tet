@@ -49,6 +49,12 @@
 - [ ] T2 — requirements-dev.txt 분리, Python 버전 문구 통일
 - [ ] T3 — 안 쓰는 추적 파일 정리 (삭제 전 사용 여부 확인, 유지 목록 보존, 전체 테스트·골든·Ruff·시작 검사 필수)
 
+## CI — GitHub Actions 검증 추가 (T3 다음, C1 전)
+- [ ] CI — GitHub Actions 검증 추가
+  - `.github/workflows/ci.yml`: main push마다 windows-latest, Python 3.12. 잠금 의존성·지정 Ruff 설치 → 포맷 검사 → 전체 unittest(골든 포함).
+  - Ruff 진단 수는 기준값 파일보다 증가할 때만 실패. 시간 의존 테스트 실패 시 해당 테스트만 최대 2회 재실행하며 제한 시간·기대값은 유지.
+  - CI에서 실제 키 입력·GUI 실행·시작 검사 금지. 다른 항목과 같은 검증 게이트 통과 및 push 후 첫 CI 실행 성공 확인까지 완료 조건.
+
 ## 단계 C — 구조 개선
 - [ ] C1 — 상태 속성 __init__/reset에 명시
 - [ ] C2 — auto_plan/opener_plan 키워드 인자화

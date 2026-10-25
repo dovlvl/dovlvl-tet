@@ -84,6 +84,15 @@
 - 삭제한 파일을 언급하는 문서(`README.md`, `docs/START_HERE_KO.md`, `docs/RELEASE_POLICY.md` 등)는 해당 문장만 고치거나 지운다. 프로그램 사용법 설명은 바꾸지 않는다.
 - 다른 항목의 검증 게이트를 모두 적용한다. 전체 테스트 통과 수 유지, 기존 골든 스냅샷 일치, Ruff 검사를 확인하고, 시작 검사도 반드시 실행해 `started=true`, `auto_running=false`를 확인한다.
 
+### CI — GitHub Actions 검증 추가 (T3 다음, C1 전)
+
+- `.github/workflows/ci.yml`을 만든다. `main`에 push될 때마다 GitHub Actions `windows-latest`에서 Python 3.12로 실행한다.
+- 단계: `requirements-lock.txt` 설치 → `pyproject.toml`의 `required-version`과 같은 Ruff 설치 → `ruff format --check src tests tools` → 전체 unittest 실행(골든 테스트 포함).
+- `ruff check`는 기존 진단이 남아 있으므로, 현재 진단 수를 기준값 파일로 저장해 두고 그보다 늘었을 때만 실패하게 한다.
+- 시간 의존 테스트는 CI 서버에서 간헐적으로 실패할 수 있으므로, 실패한 테스트만 최대 2번 다시 실행해 통과하면 성공으로 처리한다. 테스트의 제한 시간이나 기대값은 고치지 않는다.
+- 실제 키 입력, GUI 실행, 시작 검사는 CI에서 하지 않는다.
+- 다른 항목과 같은 검증 게이트를 통과해야 하고, push 후 첫 CI 실행이 성공하는 것까지 확인해야 완료다.
+
 ### 단계 C — 구조 개선
 
 | # | 작업 |
