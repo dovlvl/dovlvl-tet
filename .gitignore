@@ -3,3 +3,30 @@ __pycache__/
 build/
 *.spec
 diagnostics/
+
+# Local distributions and extracted input releases are not source roots.
+/dist/
+/release/
+*.exe
+*.dll
+*.pyd
+*.zip
+*.zip.sha256
+/test_latest_results.txt
+
+# Credentials, personal configuration and runtime output.
+.env
+.env.*
+!.env.example
+.aws/
+.tetris_trainer/
+config_v6.json
+*.log
+*.log.*
+*.pem
+*.key
+*.pfx
+.pytest_cache/
+.mypy_cache/
+*.pyc
+*.pyo

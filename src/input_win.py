@@ -1,5 +1,5 @@
 """SendInput backend + injectable nonblocking key pulses. No PostMessage fake input."""
-import ctypes,sys,threading,os,logging
+import ctypes,sys,threading,os,logging,time
 from ctypes import wintypes
 VK={'LEFT':0x25,'UP':0x26,'RIGHT':0x27,'DOWN':0x28,'SPACE':0x20,'SHIFT':0x10,'CTRL':0x11}
 VK.update({c:ord(c) for c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'})
@@ -52,6 +52,9 @@ class KeyPulse:
     def focused(self):return self.target is not None and self.backend.foreground()==self.target
     def press(self,key,now,press_ms,gap_ms):
         with self.lock:
+            guard=getattr(self,'observation_guard',None)
+            if guard and not guard(time.monotonic(),getattr(self,'expected_generation',None)):
+                self.release_all();return False
             if self.abort.is_set():raise RuntimeError('입력 중지됨')
             if not self.focused():self.cancel();raise RuntimeError('게임 창 포커스 상실')
             if self.pressed or now<self.next_at:return False
@@ -62,8 +65,16 @@ class KeyPulse:
             self.release_at=now+press_ms/1000;self.next_at=self.release_at+gap_ms/1000;return True
     def tick(self,now):
         with self.lock:
+            guard=getattr(self,'observation_guard',None)
+            if self.pressed and guard and not guard(now,getattr(self,'expected_generation',None)):
+                self.release_all()
             if self.pressed and (not self.focused() or self.abort.is_set()):self.cancel();raise RuntimeError('포커스 상실/입력 중지')
             if self.pressed and now>=self.release_at:self.release_all()
+    def acknowledged(self,now,gap_ms):
+        """The game visibly consumed this key; release without a fixed tail."""
+        with self.lock:
+            self.release_all()
+            self.next_at=min(self.next_at,now+gap_ms/1000)
     def release_all(self):
         with self.lock:
             errors=[]

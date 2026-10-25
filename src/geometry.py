@@ -1,16 +1,18 @@
 """Pure board search. Coordinates: x right, y down; visible board 10x20."""
 from collections import deque
+from functools import lru_cache
 SHAPES = {
 'I': ((0,1),(1,1),(2,1),(3,1)), 'O': ((1,0),(2,0),(1,1),(2,1)),
 'T': ((1,0),(0,1),(1,1),(2,1)), 'J': ((0,0),(0,1),(1,1),(2,1)),
 'L': ((2,0),(0,1),(1,1),(2,1)), 'S': ((1,0),(2,0),(0,1),(1,1)),
 'Z': ((0,0),(1,0),(1,1),(2,1))}
+@lru_cache(maxsize=7)
 def orientations(kind):
     p=SHAPES[kind]; out=[]
     for _ in range(4):
         out.append(p)
         p = p if kind=='O' else tuple((3-y,x) if kind=='I' else (2-y,x) for x,y in p)
-    return out
+    return tuple(out)
 
 def fits(board,p,x,y):
     return all(0<=x+a<10 and 0<=y+b<20 and not board[y+b][x+a] for a,b in p)

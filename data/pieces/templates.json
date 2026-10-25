@@ -1,0 +1,966 @@
+{
+  "schema": "tetris-piece-references-v1",
+  "source_url": "https://play.tetris.com/",
+  "kinds": {
+    "I": {
+      "source_file": "I_active.jpg",
+      "source_sha256": "5b000ec0434f8467d56f6cc171a8929a2a916d1734bf332c257b7fa4eccb1055",
+      "crop_file": "I_piece.png",
+      "board": [
+        276,
+        86,
+        491,
+        511
+      ],
+      "crop": [
+        340,
+        277,
+        426,
+        298
+      ],
+      "cells": [
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          6,
+          9
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 185.6772918701172,
+      "sample_rgb": [
+        0,
+        173,
+        191
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            3
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "O": {
+      "source_file": "O_active.jpg",
+      "source_sha256": "49dfd2fbca266da8c542fffc122fd80c820d7be25446feb18925c4d0886b9599",
+      "crop_file": "O_piece.png",
+      "board": [
+        277,
+        86,
+        490,
+        511
+      ],
+      "crop": [
+        362,
+        150,
+        405,
+        192
+      ],
+      "cells": [
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 54.939579010009766,
+      "sample_rgb": [
+        196,
+        180,
+        0
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      ],
+      "min_cell_confidence": 0.88,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "T": {
+      "source_file": "T_active.jpg",
+      "source_sha256": "f876831adc309d6b141bf447dad796d1632d79aae19ae6f884409231d66b647b",
+      "crop_file": "T_piece.png",
+      "board": [
+        276,
+        86,
+        491,
+        511
+      ],
+      "crop": [
+        340,
+        150,
+        405,
+        192
+      ],
+      "cells": [
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 290.0390625,
+      "sample_rgb": [
+        164,
+        0,
+        197
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "S": {
+      "source_file": "S_active.jpg",
+      "source_sha256": "bf11f09779e0a5a9bf86f9a9f471bb997889def952627dfae51eb8f509509c8b",
+      "crop_file": "S_piece.png",
+      "board": [
+        276,
+        86,
+        491,
+        511
+      ],
+      "crop": [
+        340,
+        277,
+        405,
+        320
+      ],
+      "cells": [
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          9
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 141.76600646972656,
+      "sample_rgb": [
+        3,
+        195,
+        73
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "Z": {
+      "source_file": "Z_active.jpg",
+      "source_sha256": "950d4e40d3fdeba4e7481ba7b1f4816d6b3fa4c8034bfca4a3201e14e39f7858",
+      "crop_file": "Z_piece.png",
+      "board": [
+        276,
+        86,
+        491,
+        511
+      ],
+      "crop": [
+        340,
+        107,
+        405,
+        150
+      ],
+      "cells": [
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 359.26605224609375,
+      "sample_rgb": [
+        199,
+        0,
+        3
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "J": {
+      "source_file": "J_active.jpg",
+      "source_sha256": "b9a4eff3151825095507b12f64c0bfe90961bdf31f3582ab7d1fa0a31f91e867",
+      "crop_file": "J_piece.png",
+      "board": [
+        277,
+        86,
+        490,
+        511
+      ],
+      "crop": [
+        341,
+        277,
+        405,
+        320
+      ],
+      "cells": [
+        [
+          3,
+          9
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          4,
+          10
+        ],
+        [
+          5,
+          10
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 203.24166870117188,
+      "sample_rgb": [
+        4,
+        118,
+        190
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    },
+    "L": {
+      "source_file": "L_active.jpg",
+      "source_sha256": "2e0b1db3b04fce4f55b9ee57b433e9cce3675bd5256a6f7f622631176d529e95",
+      "crop_file": "L_piece.png",
+      "board": [
+        277,
+        86,
+        490,
+        511
+      ],
+      "crop": [
+        341,
+        405,
+        405,
+        447
+      ],
+      "cells": [
+        [
+          3,
+          16
+        ],
+        [
+          4,
+          16
+        ],
+        [
+          5,
+          15
+        ],
+        [
+          5,
+          16
+        ]
+      ],
+      "observed_shape": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "observed_rotation": 0,
+      "hue_degrees": 43.7325439453125,
+      "sample_rgb": [
+        196,
+        142,
+        1
+      ],
+      "rotations": [
+        [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            2
+          ]
+        ]
+      ],
+      "min_cell_confidence": 1.0,
+      "verification": "real screenshot; grid, color and four-cell geometry checked",
+      "rotations_verification": "derived from SRS geometry, not real captures of all rotations"
+    }
+  },
+  "rotation_order": "0,90,180,270 degrees clockwise; equivalent appearances remain ambiguous"
+}

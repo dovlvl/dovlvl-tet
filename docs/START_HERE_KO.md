@@ -1,6 +1,10 @@
 # 수정본 실행 및 진단 순서
 
-압축을 새 폴더에 풀고 run_windows.bat(Python 3.11+ x64) 또는 dist/TetrisTrainer_v06_fixed.exe를 실행합니다. 일반 Chrome/Edge + Windows 캡처 방식입니다. F6 시작·중지 / F8 긴급 중지와 키 해제.
+> 최신 실행·두 줄 UI·설정 경로는 루트 [README](../README.md)를 기준으로 합니다.
+> 아래 설명은 이전 UI의 진단 기록이며 현재 메인 화면에 고급 메뉴는 없습니다.
+> 과거 판독 비교 코드는 테스트 전용이고, 비교 CLI는 `tools/preview_compare.py`에 있습니다.
+
+run_windows.bat(Python 3.11+ x64) 또는 dist/TetrisAuto.exe를 실행합니다. 일반 Chrome/Edge + Windows 캡처 방식입니다. F6 시작·중지 / F8 긴급 중지와 키 해제. 새 기본값은 continuous이며 Auto 전략 설명은 AUTO_STRATEGY_KO.md를 참고하세요. 입력 진단·영역 수정·프리뷰 진단은 고급 메뉴로 이동했습니다.
 
 1. 실제 게임 창을 고르고 입력 진단부터 실행합니다. HOLD는 C, 좌우/아래는 방향키, 하드드롭은 Space입니다. 회전은 게임 설정을 직접 확인하고 키를 지정하세요. Blox의 C=180도 회전/왼쪽 Shift=HOLD는 실제 게임에 적용하지 않습니다.
 2. 게임 찾기 또는 수동 영역 지정. BOARD 10×20 내부를 지정하고 HOLD 및 각 NEXT 슬롯은 글자/테두리보다 블록과 여백을 포함하도록 별도 지정합니다. NEXT 1이 맨 위입니다. 확대/축소 또는 슬롯 개수가 다르면 수동 수정하세요.
@@ -13,7 +17,7 @@
 ## 실제 캡처 전후 비교
 전체 무주석 캡처와 같은 이름의 메타데이터 JSON을 준비합니다. 예:
 ```
-.venv\Scripts\python src\preview_compare.py diagnostics\20261025_120000_raw.png diagnostics\20261025_120000.json --output real_comparison
+.venv\Scripts\python tools\preview_compare.py diagnostics\20261025_120000_raw.png diagnostics\20261025_120000.json --output real_comparison
 ```
 비교 JSON에 이전 판독/새 판독을 함께 기록하고 슬롯별 원본·마스크·정규화를 저장합니다. 실제 정답은 사용자가 직접 확인해야 하며 프로그램이 정확도를 자동 인증하지 않습니다. 
 

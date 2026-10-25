@@ -26,13 +26,22 @@ class DetectorTests(unittest.TestCase):
                 for x,y in orientations(kind)[0]:d.rectangle((560+x*18,top+y*18,576+x*18,top+y*18+16),fill=PALETTE[kind])
         return np.asarray(im)
     def test_grid_and_hold_next_independent(self):
-        z=detect(self.image());self.assertIsNotNone(z['board']);self.assertIsNotNone(z['hold']);self.assertEqual(len(z['next_slots']),3)
+        z=detect(self.image(),default_count=3);self.assertIsNotNone(z['board']);self.assertIsNotNone(z['hold']);self.assertEqual(len(z['next_slots']),3)
         self.assertLess(abs(z['board'][0]-300),4);self.assertGreater(z['next_slots'][0][0],500);self.assertLess(z['hold'][3],200)
     def test_empty_board_hold_and_next_geometry(self):
-        z=detect(self.image(False));self.assertIsNotNone(z['board']);self.assertIsNotNone(z['hold']);self.assertEqual(len(z['next_slots']),3);self.assertTrue(z['next_count_inferred'])
+        z=detect(self.image(False),default_count=3);self.assertIsNotNone(z['board']);self.assertIsNotNone(z['hold']);self.assertEqual(len(z['next_slots']),3);self.assertTrue(z['next_count_inferred'])
     def test_ad_without_grid_rejected(self):
         im=np.full((500,800,3),238,np.uint8);im[20:420,300:500]=16
         self.assertIsNone(detect(im)['board'])
+    def test_menu_hidden_grid_keeps_independently_anchored_regions(self):
+        im=self.image(False).copy()
+        im[24:437,294:507]=17
+        z=detect(im)
+        self.assertIsNotNone(z['board']);self.assertTrue(z['geometry_only'])
+        self.assertIsNotNone(z['hold']);self.assertEqual(len(z['next_slots']),1)
+        c=copy.deepcopy(DEFAULT);c.update({k:z[k] for k in ('board','hold','next_slots')})
+        o=Recognizer().process(im,(0,0,800,500),c,1,time.monotonic())
+        self.assertFalse(o.valid)
     def test_negative_monitor_coordinates(self):
         z=detect(self.image(),(-1920,-120));self.assertLess(z['board'][0],0);self.assertLess(z['board'][1],0)
         c=copy.deepcopy(DEFAULT);c.update({k:z[k] for k in ('board','hold','next_slots')});validate(c,True)
@@ -43,7 +52,7 @@ class DetectorTests(unittest.TestCase):
         im=self.image().copy();im[50:350,520:700]=238;z=detect(im)
         self.assertIsNotNone(z['board']);self.assertFalse(z['next_slots']);self.assertIn('next',z['reasons'])
     def test_same_frame_auto_detection_and_recognition(self):
-        im=self.image();z=detect(im);c=copy.deepcopy(DEFAULT);c.update({k:z[k] for k in ('board','hold','next_slots')});o=Recognizer().process(im,(0,0,800,500),c,1,time.monotonic())
+        im=self.image();z=detect(im,default_count=3);c=copy.deepcopy(DEFAULT);c.update({k:z[k] for k in ('board','hold','next_slots')});o=Recognizer().process(im,(0,0,800,500),c,1,time.monotonic())
         self.assertTrue(o.hold.valid);self.assertIsNone(o.hold.kind);self.assertEqual(o.queue,('L','T','O'))
 class DesktopStateTests(unittest.TestCase):
     def test_release_failure_stops_and_reports_error(self):

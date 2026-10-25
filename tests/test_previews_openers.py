@@ -5,7 +5,7 @@ from unittest.mock import patch
 import numpy as np
 from PIL import Image,ImageDraw
 from recognition import PreviewCache,Recognizer,PALETTE
-from recognition_before_preview_fix import PreviewCache as OldPreview
+from legacy_preview_reference import PreviewCache as OldPreview
 from geometry import orientations,settle
 from planner import route_to
 from openers import load_book,compile_book,opener_plan,mirrored_variant

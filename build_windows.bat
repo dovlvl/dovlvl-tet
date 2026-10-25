@@ -1,13 +1,13 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-py -3 -m venv .venv
+if not exist .venv\Scripts\python.exe py -3 -m venv .venv
 if errorlevel 1 goto fail
-.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m pip install -r requirements-lock.txt
 if errorlevel 1 goto fail
 .venv\Scripts\python -m unittest discover -s tests -v
 if errorlevel 1 goto fail
-.venv\Scripts\python -m PyInstaller --noconfirm --clean --onefile --windowed --name TetrisTrainer_v06_fixed --paths src --manifest packaging\app.manifest src\trainer.py
+.venv\Scripts\python tools\build_exe.py --name TetrisAuto --verify-startup
 if errorlevel 1 goto fail
 start "" dist
 pause

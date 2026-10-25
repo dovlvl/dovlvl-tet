@@ -33,7 +33,7 @@ class RecognitionTests(unittest.TestCase):
     def test_hold_exchange(self):
         self.read(kind='T',held='I');o=self.read(kind='I',held='T');self.assertEqual(o.active.kind,'I');self.assertEqual(o.hold.kind,'T');self.assertFalse(any(map(any,o.fixed)))
     def test_lock_and_new_spawn(self):
-        self.read(kind='T');self.board[19][0:4]=[1]*4
+        self.read(kind='T');self.board=settle(self.board,orientations('T')[0],0,18)[0]
         o=self.read(kind='I');self.assertEqual(o.active.kind,'I');self.assertEqual(sum(map(sum,o.fixed)),4)
     def test_empty_ready_but_no_active(self):
         o=self.read(kind=None);self.assertIsNone(o.active);self.assertEqual(sum(map(sum,o.fixed)),0);self.assertGreater(o.fixed_confidence,.9)
@@ -122,7 +122,7 @@ class ControlTests(unittest.TestCase):
         self.assertEqual(ctl.phase,'WAIT_DROP');self.assertIsNotNone(ctl.wait)
         synthetic_tick(ctl,self.make_obs(g,11,t+3),t+3);self.assertFalse(ctl.running)
     def test_uncertainty_timeout(self):
-        ctl=AutoController(KeyPulse(FakeBackend()),C);t=time.monotonic();ctl.start(99,t);synthetic_tick(ctl,None,t+4);self.assertFalse(ctl.running)
+        ctl=AutoController(KeyPulse(FakeBackend()),C);t=time.monotonic();ctl.start(99,t);synthetic_tick(ctl,None,t+4);self.assertTrue(ctl.running);self.assertEqual(ctl.phase,'VISION_WAIT');self.assertFalse(ctl.pulse.pressed)
     def test_own_window_rejected(self):
         ctl=AutoController(KeyPulse(FakeBackend()),C)
         with self.assertRaises(ValueError):ctl.start(1,time.monotonic())

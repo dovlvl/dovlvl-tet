@@ -17,6 +17,7 @@ class Active:
     cells:frozenset
     confidence:float
     updated:float
+    rotation_candidates:tuple=()
 @dataclass
 class Observation:
     seq:int
@@ -38,6 +39,20 @@ class Observation:
     fixed_confidence:float=0
     ghost_confidence:float=0
     ghost_updated:float=0
+    prediction_match:Optional[bool]=None
+    hold_stable:int=0
+    next_stable:int=0
+    generation:int=0
+    transition:str='initial'
+    generation_first_seen:float=0
+    gravity_cps:float=0
+    motion_samples:int=0
+    frame_interval_ms:float=17
+    fall_cells:int=0
+    fall_ms:Optional[float]=None
+    motion_tracked:bool=False
+    grounded_ms:float=0
+    grounded_known:bool=False
     @property
     def board_key(self):return tuple(tuple(r) for r in self.fixed)
     @property

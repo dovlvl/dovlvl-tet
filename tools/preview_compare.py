@@ -2,12 +2,14 @@
 Usage: python preview_compare.py shot_raw.png shot.json --output comparison
 Metadata: {capture_box:[left,top,right,bottom], config:{hold:...,next_slots:...}}
 """
-import argparse,json
+import argparse,json,sys
 from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
+sys.path[:0]=[str(ROOT/'src'),str(ROOT/'tests')]
 import numpy as np
 from PIL import Image
 from recognition import PreviewCache
-from recognition_before_preview_fix import PreviewCache as Before
+from legacy_preview_reference import PreviewCache as Before
 
 def compare(image,metadata,output):
     out=Path(output);out.mkdir(parents=True,exist_ok=True);rgb=np.asarray(Image.open(image).convert('RGB'));meta=json.loads(Path(metadata).read_text(encoding='utf-8-sig'));c=meta['config'];origin=meta.get('capture_box',[0,0,rgb.shape[1],rgb.shape[0]]);results=[]

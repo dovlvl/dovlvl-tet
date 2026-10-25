@@ -6,6 +6,10 @@ from recognition import PALETTE,cellset
 from geometry import orientations,advance,settle,fits
 C=copy.deepcopy(DEFAULT);C.update(preview_verified=True,auto_mode='continuous',rotation_confirmed=True,board=[0,0,200,400],hold=[220,0,320,80],next_slots=[[220,100,320,180],[220,190,320,270],[220,280,320,360]])
 C['keys']['z']='Z';C['keys']['hold']='C'
+# The legacy geometric mock explicitly permits a 5 s lock window. Timed
+# gravity/unknown-lock-delay tests use a separate profile and simulator.
+C.update(lock_delay_verified=True,lock_delay_ms=5000)
+C['allow_stationary_bootstrap']=True # Static screenshot fixtures; live default requires motion below spawn.
 
 def scene(board,kind='T',state=(3,0,0),held=None,nexts=('I','L','O'),ghost=False):
     im=Image.new('RGB',(340,400),'#101010');d=ImageDraw.Draw(im)

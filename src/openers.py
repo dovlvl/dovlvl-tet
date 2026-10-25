@@ -51,7 +51,7 @@ def mirrored_variant(variant):
         for key in ('expected_before','expected_after','state','lines'):step.pop(key,None)
     return v
 
-def opener_plan(book,index,chosen,board,kind,start,held,queue,hold_used,hold_available,rotation):
+def opener_plan(book,index,chosen,board,kind,start,held,queue,hold_used,hold_available,rotation,counterclockwise=False):
     begin=time.perf_counter();key=board_key(board)
     for variant in book['variants']:
         if chosen and variant['name']!=chosen:continue
@@ -61,8 +61,16 @@ def opener_plan(book,index,chosen,board,kind,start,held,queue,hold_used,hold_ava
         desired=step['kind'];use_hold=kind!=desired
         if use_hold and (hold_used or not hold_available or (held or (queue[0] if queue else None))!=desired):continue
         # Future variants are never selected using unseen queue entries.
-        path=route_to(board,desired,(3,0,0) if use_hold else start,step['cells'],rotation)
+        spawn=(3,0,0) if use_hold else start
+        spin='none'
+        if desired=='T' and step['lines']:
+            path=route_to(board,desired,spawn,step['cells'],rotation,counterclockwise,spin='full')
+            if path is not None:spin='full'
+            else:continue
+        else:path=route_to(board,desired,spawn,step['cells'],rotation,counterclockwise)
         if path is None:continue
-        result=dict(cells=step['cells'],hold=use_hold,path=path,opener_variant=variant['name'],expected_after=step['expected_after'],lines=step['lines'])
+        x,y,r=step['state']
+        result=dict(kind=desired,x=x,y=y,r=r,board=[list(row) for row in step['expected_after']],score=0,
+                    spin=spin,cells=step['cells'],hold=use_hold,path=path,opener_variant=variant['name'],expected_after=step['expected_after'],lines=step['lines'])
         return dict(result=result,search_ms=(time.perf_counter()-begin)*1000,nodes=1)
     return dict(result=None,reason='OPENER_CONDITION_ERROR: 보드/현재 큐/HOLD/도달 경로 불일치. 빌드 중지',search_ms=(time.perf_counter()-begin)*1000,nodes=0)

@@ -31,7 +31,7 @@ def fit_grid(rgb,box):
     if not .46<=(out[2]-out[0])/(out[3]-out[1])<=.54:return None
     return (v[0]+h[0])/2,out
 
-def split_next(rgb,box,default_count=3):
+def split_next(rgb,box,default_count=1):
     x,y,r,b=box;crop=rgb[y:b,x:r];lab,_,_=labels(crop);rows=(lab>0).sum(1)>max(3,(r-x)*.03)
     # Close tiny mino-border gaps, not the gap between preview slots.
     kernel=np.ones((max(1,round((r-x)*.025)),1),np.uint8)
@@ -46,24 +46,43 @@ def split_next(rgb,box,default_count=3):
     if inferred:n=default_count;edges=[round((b-y)*i/n) for i in range(n+1)]
     else:
         centers=[(a+c)/2 for a,c in groups];edges=[0]+[round((a+c)/2) for a,c in zip(centers,centers[1:])]+[b-y]
-    return [[x,y+a,r,y+c] for a,c in zip(edges,edges[1:])],inferred
+    # Detect all boundaries before limiting: dividing a whole panel into one
+    # requested slot would merge every visible piece into a single reading.
+    return [[x,y+a,r,y+c] for a,c in zip(edges,edges[1:])][:default_count],inferred
 
-def detect(rgb,origin=(0,0),default_count=3):
-    regions=components(rgb);candidates=[]
-    for area,box in regions:
-        x,y,r,b=box;w=r-x;h=b-y
-        if w<75 or h<160 or not .43<w/h<.57 or area/(w*h)<.5:continue
-        fit=fit_grid(rgb,box)
-        if fit:candidates.append((fit[0],area,fit[1]))
-    result={'board':None,'hold':None,'next_slots':[],'confidence':{},'reasons':{},'next_count_inferred':False}
-    if not candidates:result['reasons']['board']='10×20 격자/테두리 검증 실패: 가림·팝업·크기 또는 다른 화면';return result
-    _,_,board=max(candidates);result['board']=board;result['confidence']['board']=.9;x,y,r,b=board;bh=b-y;bw=r-x;left=[];right=[]
+def adjacent_panels(regions,board):
+    x,y,r,b=board;bh=b-y;bw=r-x;left=[];right=[]
     for area,box in regions:
         a,c,d,e=box;w=d-a;h=e-c
         if w<20 or h<20 or area/(w*h)<.5:continue
         if d<=x and x-d<bw*1.1 and y<=c<y+bh*.35 and e<y+bh*.5:left.append((area,box))
         if a>=r and a-r<bw*1.1 and y<=c<y+bh*.4 and h<bh*.75:right.append((area,box))
-    if left:result['hold']=max(left)[1];result['confidence']['hold']=.8
+    return left,right
+
+def detect(rgb,origin=(0,0),default_count=1):
+    regions=components(rgb);candidates=[]
+    for area,box in regions:
+        x,y,r,b=box;w=r-x;h=b-y
+        if w<75 or h<160 or not .43<w/h<.57 or area/(w*h)<.5:continue
+        fit=fit_grid(rgb,box)
+        if fit:candidates.append((fit[0],area,fit[1],False))
+        else:
+            # A menu can hide every grid line. Keep geometry only when both
+            # independent side panels anchor a plausible central 1:2 rectangle.
+            left,right=adjacent_panels(regions,box)
+            if left and right and .48<w/h<.52:
+                l=max(left)[1];n=max(right)[1]
+                if abs(l[1]-n[1])<h*.06 and abs((l[2]-l[0])-(n[2]-n[0]))<w*.25:
+                    px=max(2,round(w*.02));py=max(2,round(h*.01))
+                    candidates.append((.1,area,[x+px,y+py,r-px,b-py],True))
+    result={'board':None,'hold':None,'next_slots':[],'confidence':{},'reasons':{},'next_count_inferred':False}
+    if not candidates:result['reasons']['board']='10×20 격자/테두리 검증 실패: 가림·팝업·크기 또는 다른 화면';return result
+    _,_,board,geometry_only=max(candidates);result['board']=board;result['geometry_only']=geometry_only;result['confidence']['board']=.65 if geometry_only else .9
+    if geometry_only:result['reasons']['board']='구역 위치 확인: 메뉴/격자 가림. 실제 블록 판독 대기'
+    left,right=adjacent_panels(regions,board)
+    if left:
+        a,c,d,e=max(left)[1];pad=max(2,round(min(d-a,e-c)*.04))
+        result['hold']=[a+pad,c+pad,d-pad,e-pad];result['confidence']['hold']=.8
     else:result['reasons']['hold']='HOLD 내부 패널 미탐지: 해당 영역만 수동 지정 가능'
     if right:
         slots,inferred=split_next(rgb,max(right)[1],default_count);result['next_slots']=slots;result['next_count_inferred']=inferred;result['confidence']['next']=.65 if inferred else .85
@@ -78,3 +97,17 @@ def panel_occluded(rgb):
     hi=rgb.max(-1);lo=rgb.min(-1);mask=((hi>=32)&(hi<200)&(hi.astype(int)-lo<15)).astype(np.uint8)
     _,_,stats,_=cv2.connectedComponentsWithStats(mask,8);height,width=rgb.shape[:2]
     return any(area>height*width*.12 and w>width*.45 and h>height*.15 for x,y,w,h,area in stats[1:])
+
+def refine_saved_regions(rgb,origin,config):
+    """Recover nearby panel interiors from saved rectangles including borders."""
+    found=detect(rgb,origin,config.get('next_default_count',1))
+    if found.get('geometry_only'):return {}
+    old=config['board'];new=found['board']
+    if not old or not new:return {}
+    # Never switch to another board elsewhere in the captured image.
+    tolerance=(old[2]-old[0])*.10
+    if max(abs(a-b) for a,b in zip(old,new))>tolerance:return {}
+    result={'board':new}
+    for name in ('hold','next_slots'):
+        if found[name]:result[name]=found[name]
+    return result
