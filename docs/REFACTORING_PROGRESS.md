@@ -20,7 +20,12 @@
   - 시작 검사 대상 파일 변경 없음. 실제 Auto·입력 진단 실행 안 함. 상세 로그: 로컬 `diagnostics/refactor_g/`. 다음 항목은 B1.
 
 ## 단계 B — 기계적 정리
-- [ ] B1 — cellset을 geometry.py로 이동
+- [x] B1 — cellset을 geometry.py로 이동 — 2026-10-26 / 153→153 통과, 골든 일치
+  - `cellset` 본문·인자를 그대로 geometry로 이동. recognition에서 같은 함수를 재노출하며 planner/openers/controller/timing/blox_import와 관련 tools/tests의 import 정리. 관련 geometry 지연 import 제거.
+  - 이전 소스를 선택하는 벤치마크의 `--source` 호환성을 위해 recognition의 기존 공개 이름과 경로 선택 후 import 시점은 유지. 중첩 경로 검사에서는 바깥 import를 재사용.
+  - 전체 테스트: 작업 전 153개 통과(44.723초), 최종 작업 후 153개 통과(43.815초). 간헐 실패 없음. 포함된 골든 8개 모두 기존 스냅샷과 일치, 스냅샷 파일 변경 없음.
+  - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 전체 diff 자기 검토 및 import·함수 이동을 제외한 AST 비교 통과. 기존 테스트 기대값·안전 조건·호출 순서·사용자 메시지 유지.
+  - 시작 검사 대상 파일 변경 없음. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b1/`. 다음 항목은 B2.
 - [ ] B2 — 착지 계산 헬퍼 통일
 - [ ] B3 — SRS 킥 조회 헬퍼
 - [ ] B4 — 높이/구멍 계산 공통화

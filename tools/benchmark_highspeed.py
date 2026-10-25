@@ -9,6 +9,7 @@ import numpy as np
 from helpers import C, FakeBackend
 from timed_game import TimedGame
 from recognition import Recognizer
+from geometry import cellset  # noqa: E402 -- source path is configured above
 from controller import AutoController
 from runtime import Session
 from input_win import KeyPulse
@@ -69,7 +70,7 @@ def run(cps, limit=10, seconds=18, record=False):
                 o.active is not None
                 and o.board_key == board
                 and o.active.kind == kind
-                and o.active.cells == __import__("recognition").cellset(kind, state)
+                and o.active.cells == cellset(kind, state)
             )
             records.append(
                 dict(

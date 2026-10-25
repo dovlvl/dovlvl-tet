@@ -1,8 +1,7 @@
 """Closed-loop controller: one acknowledged action at a time."""
 
 import time, logging
-from geometry import advance, settle, orientations, fits
-from recognition import cellset
+from geometry import advance, settle, orientations, fits, cellset, IKICKS, JLSTZ
 from planner import route_to, landings, BudgetExpired
 from timing import route_feasible, timing_profile
 from scoring import ScoreState, award, tspin
@@ -523,8 +522,6 @@ class AutoController:
                 return
             self.pulse.acknowledged(now, self.c["gap_ms"])
             if action in ("up", "z"):
-                from geometry import IKICKS, JLSTZ
-
                 old = before.active.state
                 expected = w["expected"]
                 offsets = (

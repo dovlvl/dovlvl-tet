@@ -4,8 +4,7 @@ Never eval JavaScript. Dynamic SuperShape / DPC / inferred orders are unsupporte
 
 import argparse, re, json, hashlib
 from pathlib import Path
-from geometry import orientations, fits, settle
-from recognition import cellset
+from geometry import orientations, fits, settle, cellset
 from openers import compile_book
 
 COLORS = {"teal": "I", "yellow": "O", "purple": "T", "blue": "J", "orange": "L", "red": "Z", "green": "S"}

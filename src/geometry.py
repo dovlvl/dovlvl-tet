@@ -24,6 +24,11 @@ def orientations(kind):
     return tuple(out)
 
 
+def cellset(kind, state):
+    x, y, r = state
+    return frozenset((x + a, y + b) for a, b in orientations(kind)[r])
+
+
 def fits(board, p, x, y):
     return all(0 <= x + a < 10 and 0 <= y + b < 20 and not board[y + b][x + a] for a, b in p)
 

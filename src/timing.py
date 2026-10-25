@@ -3,7 +3,7 @@
 from collections import deque
 from copy import copy
 from math import ceil
-from geometry import orientations, fits, advance
+from geometry import orientations, fits, advance, cellset
 
 
 def drop_distance(board, kind, state):
@@ -127,8 +127,6 @@ def route_feasible(board, kind, start, path, target, profile):
     positive lock delay was explicitly verified. A hard drop is a calculated
     placement and must match the chosen target exactly.
     """
-    from recognition import cellset
-
     if not path or path[-1] != "drop":
         return False, "PATH_WITHOUT_DROP"
     if profile.get("grounded_unusable", False):

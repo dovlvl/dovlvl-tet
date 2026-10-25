@@ -5,7 +5,8 @@ from functools import lru_cache
 from dataclasses import replace
 import numpy as np
 from model import Active, Reading, Observation
-from geometry import SHAPES, orientations
+from geometry import SHAPES, orientations, fits, settle
+from geometry import cellset as cellset
 from piece_library import hue_centers, shape_rotations
 
 KINDS = ("", "Z", "L", "O", "S", "I", "J", "T")
@@ -81,11 +82,6 @@ def sample_board(rgb, min_s=0.28, min_v=0.28):
     neutral = ((sat < 0.15) & (light > 0.3)).mean(axis=(-1, -2)) > 0.45
     invalid = bool(neutral.sum() > 12 or (conf < 0.6).sum() > 15)
     return grid, conf, ghost, invalid
-
-
-def cellset(kind, state):
-    x, y, r = state
-    return frozenset((x + a, y + b) for a, b in orientations(kind)[r])
 
 
 def identify(cells, grid):
@@ -283,8 +279,6 @@ def lock_successors(board, kind, state=None):
 @lru_cache(maxsize=256)
 def _lock_successors(board, kind, state=None):
     """Pixel hypotheses for one observed piece locking, including line clears."""
-    from geometry import fits, settle
-
     result = {}
     starts = [(x, 0, r) for r in range(4) for x in range(-3, 10)]
     if state is not None:
@@ -482,8 +476,6 @@ class Recognizer:
             rest = grid.copy()
             for x, y in cells:
                 rest[y, x] = 0
-            from geometry import fits
-
             for gk, gs in components(rest):
                 gc = cellset(gk, gs)
                 if gk != kind or min(y for x, y in gc) <= max(y for x, y in cells):

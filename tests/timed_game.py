@@ -2,9 +2,8 @@
 
 import time
 from helpers import Game, scene, C
-from geometry import advance, fits, orientations, settle
+from geometry import advance, fits, orientations, settle, cellset
 from input_win import VK
-from recognition import cellset
 
 
 class TimedGame(Game):

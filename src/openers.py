@@ -2,8 +2,7 @@
 
 import copy, json, time
 from pathlib import Path
-from geometry import orientations, fits, settle
-from recognition import cellset
+from geometry import orientations, fits, settle, cellset
 from planner import route_to
 
 KINDS = set("IJLOSTZ")

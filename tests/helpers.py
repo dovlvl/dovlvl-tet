@@ -2,8 +2,8 @@ import time, copy
 import numpy as np
 from PIL import Image, ImageDraw
 from config import DEFAULT
-from recognition import PALETTE, cellset
-from geometry import orientations, advance, settle, fits
+from recognition import PALETTE
+from geometry import orientations, advance, settle, fits, cellset
 
 C = copy.deepcopy(DEFAULT)
 C.update(

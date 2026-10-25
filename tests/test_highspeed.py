@@ -3,12 +3,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from helpers import C, scene, Game, FakeBackend, synthetic_tick, synthetic_emit
-from recognition import Recognizer, cellset
+from recognition import Recognizer
 from timing import MotionTracker, route_feasible, search_budget
 from controller import AutoController
 from input_win import KeyPulse, VK
 from planner import urgent_plan
-from geometry import settle, orientations
+from geometry import settle, orientations, cellset
 
 
 class HighSpeedTrackingTests(unittest.TestCase):

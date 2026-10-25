@@ -50,7 +50,7 @@ def main():
     from planner import plan, route_to
     from strategy import position_score
     from geometry import fits, orientations, settle
-    from recognition import Recognizer
+    from recognition import Recognizer, cellset
     from helpers import C, Game, FakeBackend
     from controller import AutoController
     from input_win import KeyPulse
@@ -220,8 +220,6 @@ def main():
                 p = orientations(obs.active.kind)[r]
                 while fits(obs.fixed, p, x, y + 1):
                     y += 1
-                from recognition import cellset
-
                 route_ok.append(
                     ctl.plan is None or cellset(obs.active.kind, (x, y, r)) == frozenset(map(tuple, ctl.plan["cells"]))
                 )

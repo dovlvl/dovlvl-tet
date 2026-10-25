@@ -3,8 +3,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from planner import plan, landings
-from geometry import advance, fits, orientations, settle
-from recognition import Recognizer, cellset, PALETTE
+from geometry import advance, fits, orientations, settle, cellset
+from recognition import Recognizer, PALETTE
 from helpers import C, scene, Game, FakeBackend, synthetic_tick, synthetic_emit
 from controller import AutoController
 from input_win import KeyPulse

@@ -3,8 +3,7 @@
 from collections import deque
 from functools import lru_cache
 from time import perf_counter
-from geometry import orientations, advance, fits, settle, evaluate, IKICKS, JLSTZ
-from recognition import cellset
+from geometry import orientations, advance, fits, settle, evaluate, IKICKS, JLSTZ, cellset
 from scoring import tspin, award, ScoreState, SITE_RULES
 from dataclasses import asdict
 
