@@ -48,13 +48,25 @@ def settle(board, p, x, y):
     return [[0] * 10 for _ in range(lines)] + remaining, lines
 
 
-def evaluate(b, lines):
+def board_metrics(board):
     heights = []
     holes = 0
+    buried = 0
     for x in range(10):
-        first = next((y for y in range(20) if b[y][x]), 20)
+        first = next((y for y in range(20) if board[y][x]), 20)
         heights.append(20 - first)
-        holes += sum(not b[y][x] for y in range(first, 20))
+        cover = 0
+        for y in range(first, 20):
+            if board[y][x]:
+                cover += 1
+            else:
+                holes += 1
+                buried += cover
+    return heights, holes, buried
+
+
+def evaluate(b, lines):
+    heights, holes, _ = board_metrics(b)
     return (
         3.0 * lines
         - 0.51 * sum(heights)

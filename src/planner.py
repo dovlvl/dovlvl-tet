@@ -3,7 +3,7 @@
 from collections import deque
 from functools import lru_cache
 from time import perf_counter
-from geometry import orientations, advance, fits, settle, evaluate, cellset, hard_drop, kick_offsets
+from geometry import orientations, advance, fits, settle, evaluate, cellset, hard_drop, kick_offsets, board_metrics
 from scoring import tspin, award, ScoreState, SITE_RULES
 from dataclasses import asdict
 
@@ -470,7 +470,7 @@ def plan(
                 break
     except BudgetExpired:
         timed_out = True
-    height = max((20 - y for y, row in enumerate(board) if any(row)), default=0)
+    height = max(board_metrics(board)[0])
     pc_deferred = bool(pc_path and height >= 12 and len(pc_path) > 1)
     if pc_path and not pc_deferred:
         projected = []

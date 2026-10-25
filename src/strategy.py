@@ -4,24 +4,8 @@ from functools import lru_cache
 from pathlib import Path
 import sys
 from geometry import evaluate
+from geometry import board_metrics as metrics
 from planner import plan
-
-
-def metrics(board):
-    heights = []
-    holes = 0
-    buried = 0
-    for x in range(10):
-        first = next((y for y in range(20) if board[y][x]), 20)
-        heights.append(20 - first)
-        cover = 0
-        for y in range(first, 20):
-            if board[y][x]:
-                cover += 1
-            else:
-                holes += 1
-                buried += cover
-    return heights, holes, buried
 
 
 def position_score(board, lines):
@@ -172,7 +156,7 @@ def auto_plan(
         use_points=True,
     )
     if packet["result"]:
-        heights, holes, _ = metrics(board)
+        heights, holes, buried = metrics(board)
         packet["result"]["strategy"] = "다운스택" if max(heights) >= 12 or holes >= 3 else "점수 / 평탄 쌓기"
         if packet["result"].get("spin") in ("full", "mini"):
             packet["result"]["strategy"] = "T-Spin / " + packet["result"]["spin"]
@@ -185,7 +169,7 @@ def auto_plan(
         packet["result"]["evaluation"] = {
             "heights": heights,
             "holes": holes,
-            "buried": metrics(board)[2],
+            "buried": buried,
             "utility": packet["result"]["score"],
             "points": packet["result"].get("expected_points"),
             "actual_points": None,
