@@ -1,0 +1,1400 @@
+{
+  "absent": "보드: 불확실   홀드: 불확실   넥스트: ? → ? → ?",
+  "statuses": [
+    {
+      "age": -0.01,
+      "error": false,
+      "result": "보드: 불확실   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": -0.01,
+      "error": true,
+      "result": "보드: 오류   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": -0.01,
+      "error": false,
+      "result": "보드: 가려짐   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": "covered"
+    },
+    {
+      "age": -0.01,
+      "error": false,
+      "result": "보드: 찾는 중   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": true,
+      "visibility": ""
+    },
+    {
+      "age": 0,
+      "error": false,
+      "result": "보드: 정상   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0,
+      "error": true,
+      "result": "보드: 오류   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0,
+      "error": false,
+      "result": "보드: 가려짐   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": "covered"
+    },
+    {
+      "age": 0,
+      "error": false,
+      "result": "보드: 찾는 중   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": true,
+      "visibility": ""
+    },
+    {
+      "age": 0.599,
+      "error": false,
+      "result": "보드: 정상   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0.599,
+      "error": true,
+      "result": "보드: 오류   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0.599,
+      "error": false,
+      "result": "보드: 가려짐   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": "covered"
+    },
+    {
+      "age": 0.599,
+      "error": false,
+      "result": "보드: 찾는 중   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": true,
+      "visibility": ""
+    },
+    {
+      "age": 0.6,
+      "error": false,
+      "result": "보드: 정상   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0.6,
+      "error": true,
+      "result": "보드: 오류   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 0.6,
+      "error": false,
+      "result": "보드: 가려짐   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": false,
+      "visibility": "covered"
+    },
+    {
+      "age": 0.6,
+      "error": false,
+      "result": "보드: 찾는 중   홀드: 비어 있음   넥스트: I → L → O",
+      "searching": true,
+      "visibility": ""
+    },
+    {
+      "age": 10,
+      "error": false,
+      "result": "보드: 불확실   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 10,
+      "error": true,
+      "result": "보드: 오류   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": ""
+    },
+    {
+      "age": 10,
+      "error": false,
+      "result": "보드: 가려짐   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": false,
+      "visibility": "covered"
+    },
+    {
+      "age": 10,
+      "error": false,
+      "result": "보드: 찾는 중   홀드: 불확실   넥스트: ? → ? → ?",
+      "searching": true,
+      "visibility": ""
+    }
+  ],
+  "validation": {
+    "board": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": null,
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "BOARD 영역을 지정하세요."
+      }
+    },
+    "complete": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": true,
+        "result": null
+      }
+    },
+    "confidence": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.1,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "색상/신뢰도 범위 오류"
+      }
+    },
+    "default": {
+      "complete": false,
+      "config": {
+        "ack_ms": 300,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": null,
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": null,
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 0,
+        "lock_delay_verified": false,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          null
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": false,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": true,
+        "result": null
+      }
+    },
+    "frame_age_ms": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 49,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "frame_age_ms: 50~500"
+      }
+    },
+    "gap_ms": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 301,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "gap_ms: 15~300 범위로 지정하세요."
+      }
+    },
+    "hold": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "BOARD / HOLD 영역이 겹칩니다."
+      }
+    },
+    "hotkey_stop": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F6",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "Hotkey conflict"
+      }
+    },
+    "hotkey_toggle": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "A",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "Hotkey: F1~F24"
+      }
+    },
+    "next_slots": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "NEXT 슬롯은 1~6개입니다."
+      }
+    },
+    "opener_enabled": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": true,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "빌드 실행은 기본 Auto/프리뷰 실게임 검증과 JSON 선택, 회전 확인 및 continuous 모드가 필요합니다."
+      }
+    },
+    "plan_age_ms": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 2001,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "plan_age_ms: 100~2000"
+      }
+    },
+    "press_ms": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 14,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "press_ms: 15~150 범위로 지정하세요."
+      }
+    },
+    "score_level": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 0,
+        "search_budget_ms": 160,
+        "search_depth": 4,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "예측 점수 레벨은 1~30입니다."
+      }
+    },
+    "search_depth": {
+      "complete": true,
+      "config": {
+        "ack_ms": 300,
+        "allow_stationary_bootstrap": true,
+        "auto_mode": "continuous",
+        "auto_start_on_launch": false,
+        "basic_auto_verified": false,
+        "board": [
+          0,
+          0,
+          200,
+          400
+        ],
+        "capture_fps": 60,
+        "confidence": 0.8,
+        "enable_hold": true,
+        "frame_age_ms": 200,
+        "gap_ms": 35,
+        "hold": [
+          220,
+          0,
+          320,
+          80
+        ],
+        "hotkey_stop": "F8",
+        "hotkey_toggle": "F6",
+        "input_countdown": 3,
+        "keys": {
+          "down": "DOWN",
+          "drop": "SPACE",
+          "hold": "C",
+          "left": "LEFT",
+          "right": "RIGHT",
+          "up": "UP",
+          "z": "Z"
+        },
+        "lock_delay_ms": 5000,
+        "lock_delay_verified": true,
+        "min_s": 0.28,
+        "min_v": 0.28,
+        "next_default_count": 1,
+        "next_slots": [
+          [
+            220,
+            100,
+            320,
+            180
+          ],
+          [
+            220,
+            190,
+            320,
+            270
+          ],
+          [
+            220,
+            280,
+            320,
+            360
+          ]
+        ],
+        "opener_enabled": false,
+        "opener_file": "",
+        "plan_age_ms": 500,
+        "press_ms": 35,
+        "preview_verified": true,
+        "realtime_search_cap_ms": 60,
+        "record_tracking_frames": false,
+        "rotation_confirmed": true,
+        "rotation_system": "SRS",
+        "save_failure_frames": true,
+        "score_level": 1,
+        "search_budget_ms": 160,
+        "search_depth": 8,
+        "site_profile": "actual_game",
+        "transition_ms": 2200,
+        "ui_fps": 10,
+        "uncertain_ms": 3500,
+        "version": 6,
+        "vision_fps": 60
+      },
+      "output": {
+        "accepted": false,
+        "message": "search_depth: 1~7"
+      }
+    }
+  }
+}
