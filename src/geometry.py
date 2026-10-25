@@ -87,10 +87,14 @@ IKICKS = {
 }
 
 
+def kick_offsets(kind, r, nr):
+    return ((0, 0),) if kind == "O" else (IKICKS if kind == "I" else JLSTZ)[r, nr]
+
+
 def rotate(board, kind, state, direction=1):
     x, y, r = state
     nr = (r + direction) % 4
-    offsets = ((0, 0),) if kind == "O" else (IKICKS if kind == "I" else JLSTZ)[r, nr]
+    offsets = kick_offsets(kind, r, nr)
     for index, (dx, dy) in enumerate(offsets):
         if fits(board, orientations(kind)[nr], x + dx, y - dy):
             return (x + dx, y - dy, nr), index

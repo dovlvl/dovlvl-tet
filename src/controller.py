@@ -1,7 +1,7 @@
 """Closed-loop controller: one acknowledged action at a time."""
 
 import time, logging
-from geometry import advance, settle, orientations, cellset, IKICKS, JLSTZ, hard_drop
+from geometry import advance, settle, orientations, cellset, hard_drop, kick_offsets
 from planner import route_to, landings, BudgetExpired
 from timing import route_feasible, timing_profile
 from scoring import ScoreState, award, tspin
@@ -521,11 +521,7 @@ class AutoController:
             if action in ("up", "z"):
                 old = before.active.state
                 expected = w["expected"]
-                offsets = (
-                    ((0, 0),)
-                    if before.active.kind == "O"
-                    else (IKICKS if before.active.kind == "I" else JLSTZ)[old[2], expected[2]]
-                )
+                offsets = kick_offsets(before.active.kind, old[2], expected[2])
                 kick = next((i for i, (dx, dy) in enumerate(offsets) if (old[0] + dx, old[1] - dy) == expected[:2]), 0)
                 self.last_rotation_meta = (True, kick)
             elif action not in ("drop",):

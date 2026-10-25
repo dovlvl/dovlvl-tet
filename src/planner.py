@@ -3,7 +3,7 @@
 from collections import deque
 from functools import lru_cache
 from time import perf_counter
-from geometry import orientations, advance, fits, settle, evaluate, IKICKS, JLSTZ, cellset, hard_drop
+from geometry import orientations, advance, fits, settle, evaluate, cellset, hard_drop, kick_offsets
 from scoring import tspin, award, ScoreState, SITE_RULES
 from dataclasses import asdict
 
@@ -90,7 +90,7 @@ def landings(
         for action in actions:
             if action in ("up", "z"):
                 nr = (r + (1 if action == "up" else -1)) % 4
-                offsets = ((0, 0),) if kind == "O" else (IKICKS if kind == "I" else JLSTZ)[r, nr]
+                offsets = kick_offsets(kind, r, nr)
                 hit = next(
                     (((x + dx, y - dy, nr), i) for i, (dx, dy) in enumerate(offsets) if valid(x + dx, y - dy, nr)), None
                 )
