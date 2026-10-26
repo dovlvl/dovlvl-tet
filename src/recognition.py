@@ -304,6 +304,16 @@ class Recognizer:
         self.last_board = None
         self.fixed_time = 0
         self.last_seq = -1
+        # reset() historically retains tracking state; preserve that behavior.
+        self.hold_stable = self.__dict__.get("hold_stable", 0)
+        self.next_stable = self.__dict__.get("next_stable", 0)
+        self.hold_signature = self.__dict__.get("hold_signature", None)
+        self.next_signature = self.__dict__.get("next_signature", None)
+        self.board_cache = self.__dict__.get("board_cache", None)
+        self.tracking_initialized = self.__dict__.get("tracking_initialized", False)
+        self.bootstrap = self.__dict__.get("bootstrap", None)
+        self.generation = self.__dict__.get("generation", 0)
+        self.transition = self.__dict__.get("transition", "initial")
 
     def reset(self):
         self.__init__()
@@ -337,16 +347,8 @@ class Recognizer:
             if nexts and nexts[0].valid and nexts[0].confidence >= config["confidence"]
             else None
         )
-        self.hold_stable = (
-            (getattr(self, "hold_stable", 0) + 1 if hs == getattr(self, "hold_signature", None) else 1)
-            if hs is not None
-            else 0
-        )
-        self.next_stable = (
-            (getattr(self, "next_stable", 0) + 1 if ns == getattr(self, "next_signature", None) else 1)
-            if ns is not None
-            else 0
-        )
+        self.hold_stable = (self.hold_stable + 1 if hs == self.hold_signature else 1) if hs is not None else 0
+        self.next_stable = (self.next_stable + 1 if ns == self.next_signature else 1) if ns is not None else 0
         self.hold_signature = hs
         self.next_signature = ns
         board_pixels = roi(config["board"])
@@ -357,7 +359,7 @@ class Recognizer:
             config["min_v"],
             tuple(map(tuple, expected_fixed)) if expected_fixed is not None else None,
         )
-        cached = getattr(self, "board_cache", None)
+        cached = self.board_cache
         if cached and cached[0] == fingerprint and cached[1].active and cached[1].confidence >= config["confidence"]:
             self.stable += 1
             active = replace(cached[1].active, updated=now)
@@ -444,12 +446,8 @@ class Recognizer:
             confidence = min(ac, float(np.quantile(conf, 0.05)))
             active = Active(kind, st, cells, ac, now, shape_rotations(kind, cells))
             reason = ""
-            if (
-                not getattr(self, "tracking_initialized", False)
-                and st[1] > 3
-                and not config.get("allow_stationary_bootstrap", False)
-            ):
-                previous = getattr(self, "bootstrap", None)
+            if not self.tracking_initialized and st[1] > 3 and not config.get("allow_stationary_bootstrap", False):
+                previous = self.bootstrap
                 current = (kind, tuple(map(tuple, fixed)), cells, st)
                 moving = previous and previous[0] == kind and previous[1] == current[1] and previous[2] != cells
                 self.bootstrap = current
@@ -517,7 +515,7 @@ class Recognizer:
                 respawned = bool(
                     self.last_active and not changed and not swapped and st[1] <= 2 and self.last_active.state[1] >= 6
                 )
-                self.generation = getattr(self, "generation", 0) + int(changed or swapped or respawned)
+                self.generation = self.generation + int(changed or swapped or respawned)
                 if changed or swapped or respawned:
                     self.transition = "lock" if changed else "piece_change"
                 self.last_fixed = fixed
@@ -562,8 +560,8 @@ class Recognizer:
             prediction_match=prediction_match,
             hold_stable=self.hold_stable,
             next_stable=self.next_stable,
-            generation=getattr(self, "generation", 0),
-            transition=getattr(self, "transition", "initial"),
+            generation=self.generation,
+            transition=self.transition,
         )
         self.board_cache = (fingerprint, copy.copy(result))
         return result

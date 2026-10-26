@@ -32,10 +32,21 @@ class AutoController:
         self.route_tail = None
         self.block_started = None
         self.started_at = None
+        self.vision_paused = False
+        self.vision_epoch = 0
+        self.vision_phase = "WAIT_VALID"
+        self.current_generation = None
+        self.last_motion_cps = 0
+        self.ack_bound_ms = 0
+        self.score_state = ScoreState()
+        self.projected_points = 0
+        self.last_rotation_meta = (False, 0)
+        self.soft_distance = 0
+        self.last_scoring_event = None
 
     def start(self, target, now):
         self.vision_paused = False
-        self.vision_epoch = getattr(self, "vision_epoch", 0) + 1
+        self.vision_epoch = self.vision_epoch + 1
         self.score_state = ScoreState(level=self.c.get("score_level", 1))
         self.projected_points = 0
         self.last_rotation_meta = (False, 0)
@@ -43,9 +54,9 @@ class AutoController:
         if self.pulse.backend.own_window(target):
             raise ValueError("게임 창을 클릭하고 F6을 누르세요.")
         logging.info("Auto start target=%s", target)
-        for name in ("current_generation", "last_motion_cps", "ack_bound_ms"):
-            if hasattr(self, name):
-                delattr(self, name)
+        self.current_generation = None
+        self.last_motion_cps = 0
+        self.ack_bound_ms = 0
         self.blocks = 0
         self.raw_diagnostic = None
         self.opener_variant = None
@@ -131,7 +142,7 @@ class AutoController:
             if obs and obs.gravity_cps > 0:
                 self.last_motion_cps = obs.gravity_cps
             if obs and obs.active and obs.confidence >= self.c["confidence"]:
-                previous = getattr(self, "current_generation", obs.generation)
+                previous = obs.generation if self.current_generation is None else self.current_generation
                 if previous != obs.generation:
                     self.last_rotation_meta = (False, 0)
                     self.soft_distance = 0
@@ -175,10 +186,10 @@ class AutoController:
             )
             recoverable = not self.diagnostic and not self.c.get("opener_enabled", False)
             if recoverable and invalid:
-                if not getattr(self, "vision_paused", False):
+                if not self.vision_paused:
                     self.vision_phase = self.phase
                     self.vision_paused = True
-                    self.vision_epoch = getattr(self, "vision_epoch", 0) + 1
+                    self.vision_epoch = self.vision_epoch + 1
                 if self.wait and now - self.wait["sent"] > self.c["transition_ms"] / 1000:
                     action = self.wait["action"]
                     if action == "hold":
@@ -196,13 +207,13 @@ class AutoController:
                 self.reason = "인식 복구 대기: 키 입력 중지, 화면이 안정되면 자동 재탐색"
                 self.pulse.release_all()
                 return
-            if recoverable and getattr(self, "vision_paused", False):
+            if recoverable and self.vision_paused:
                 # Brief clear/spawn animations still need their pending drop or
                 # HOLD acknowledgement; otherwise confirmed locks are lost.
                 if self.wait and now - self.wait["sent"] <= self.c["transition_ms"] / 1000:
                     self.vision_paused = False
                     self.uncertain_since = None
-                    self.phase = getattr(self, "vision_phase", "WAIT_VALID")
+                    self.phase = self.vision_phase
                     self.last_seq = obs.seq
                     self.verify(obs, now)
                     return
@@ -230,7 +241,7 @@ class AutoController:
                 )
                 # Release early on uncertainty, never keep pressing while blind.
                 self.pulse.release_all()
-                speed = getattr(self, "last_motion_cps", 0)
+                speed = self.last_motion_cps
                 tracking_limit = (
                     max(0.2, min(self.c["uncertain_ms"] / 1000, 6 / speed)) if speed else self.c["uncertain_ms"] / 1000
                 )
@@ -273,7 +284,7 @@ class AutoController:
                 return
             if self.plan["hold"]:
                 if obs.fall_ms is not None and obs.fall_ms <= (now - obs.captured) * 1000 + max(
-                    self.c["press_ms"] + self.c["gap_ms"], getattr(self, "ack_bound_ms", 0)
+                    self.c["press_ms"] + self.c["gap_ms"], self.ack_bound_ms
                 ):
                     self.stop("EXECUTION_WINDOW_EXCEEDED: insufficient time to confirm HOLD")
                     return
@@ -318,7 +329,7 @@ class AutoController:
                     self.c.get("rotation_confirmed", True),
                     bool(self.c["keys"].get("z")),
                     self.plan.get("spin"),
-                    getattr(self, "last_rotation_meta", (False, 0)),
+                    self.last_rotation_meta,
                 )
             if self.telemetry:
                 self.telemetry.add("route_ms", (time.perf_counter() - route_begin) * 1000)
@@ -330,7 +341,7 @@ class AutoController:
                     obs.active.state,
                     path,
                     self.plan["cells"],
-                    timing_profile(obs, self.c, (now - obs.captured) * 1000, getattr(self, "ack_bound_ms", None)),
+                    timing_profile(obs, self.c, (now - obs.captured) * 1000, self.ack_bound_ms),
                 )
                 if not safe:
                     self.stop("EXECUTION_WINDOW_EXCEEDED: " + why)
@@ -373,7 +384,7 @@ class AutoController:
                 obs.fixed,
                 obs.active.kind,
                 obs.active.state,
-                *getattr(self, "last_rotation_meta", (False, 0)),
+                *self.last_rotation_meta,
                 drop_distance=drop_distance(obs.fixed, obs.active.kind, obs.active.state),
             )
             if actual != self.plan["spin"]:
@@ -412,7 +423,7 @@ class AutoController:
                 obs.fixed,
                 obs.active.kind,
                 (x, y, r),
-                *getattr(self, "last_rotation_meta", (False, 0)),
+                *self.last_rotation_meta,
                 drop_distance=y - obs.active.state[1],
             )
             wait["hard_distance"] = y - obs.active.state[1]
@@ -505,7 +516,7 @@ class AutoController:
                 )
         if ok:
             latency = (now - w["sent"]) * 1000
-            self.ack_bound_ms = max(latency, getattr(self, "ack_bound_ms", 0) * 0.95)
+            self.ack_bound_ms = max(latency, self.ack_bound_ms * 0.95)
             w["hits"] += 1
             if action in ("hold", "drop") and w["hits"] < 2:
                 return
@@ -519,9 +530,7 @@ class AutoController:
             elif action not in ("drop",):
                 self.last_rotation_meta = (False, 0)
             if action == "down":
-                self.soft_distance = getattr(self, "soft_distance", 0) + max(
-                    0, obs.active.state[1] - before.active.state[1]
-                )
+                self.soft_distance = self.soft_distance + max(0, obs.active.state[1] - before.active.state[1])
             if self.telemetry:
                 self.telemetry.add("input_ack_ms", (now - w["sent"]) * 1000)
                 self.telemetry.add(action + "_ack_ms", (now - w["sent"]) * 1000)
@@ -564,11 +573,11 @@ class AutoController:
                     "none" if w.get("resynchronized") else w.get("score_spin", "none"),
                     not any(map(any, obs.fixed)),
                     w.get("hard_distance", 0),
-                    getattr(self, "soft_distance", 0),
-                    getattr(self, "score_state", ScoreState()),
+                    self.soft_distance,
+                    self.score_state,
                 )
                 self.score_state = event.pop("score_state")
-                self.projected_points = getattr(self, "projected_points", 0) + event["expected_points"]
+                self.projected_points = self.projected_points + event["expected_points"]
                 self.last_scoring_event = event
                 if self.telemetry:
                     self.telemetry.record("confirmed_lock_projection", actual_site_points=None, lines=lines, **event)

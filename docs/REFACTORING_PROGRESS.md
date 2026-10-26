@@ -83,7 +83,8 @@
   - CI에서 실제 키 입력·GUI 실행·시작 검사 금지. 다른 항목과 같은 검증 게이트 통과 및 push 후 첫 CI 실행 성공 확인까지 완료 조건.
 
 ## 단계 C — 구조 개선
-- [ ] C1 — 상태 속성 __init__/reset에 명시
+- [x] C1 — 상태 속성 __init__/reset에 명시 — 2026-10-27 / 153→153 통과, 골든 일치
+  - 기존 getattr 기본값으로 상태 필드 선언, start의 동적 삭제를 같은 초기 상태로 대체. Recognizer.reset이 추적 상태를 보존하던 동작 유지, 기준/수정 인식기 7프레임 및 reset 전후 출력 비교 일치. ack_bound의 0/None은 timing_profile의 기존 or 0 처리와 같은 결과. Ruff 포맷·진단 113 유지, 전체 diff 자기 검토: 안전 조건·키 해제·순서·문구 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c1/.
 - [ ] C2 — auto_plan/opener_plan 키워드 인자화
 - [ ] C3 — PendingAction dataclass, Phase Enum
 - [ ] C4 — Placement dataclass
