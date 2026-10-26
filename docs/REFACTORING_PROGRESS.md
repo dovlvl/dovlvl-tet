@@ -54,7 +54,11 @@
   - 전체 테스트: 작업 전 153개 중 152개 통과(68.629초), 시간 의존 `test_strategy.AdaptiveAutoTests.test_tetris_and_perfect_clear_take_priority`는 1차 단독 재실행 통과(0.090초). 작업 후 153개 중 152개 통과(73.675초), 시간 의존 `test_session.PipelineTests.test_board_only_pipeline_places_five_simulated_blocks`는 1차 단독 재실행 통과(3.904초, 5블록 확인). 두 간헐 실패는 서로 다른 테스트이며 제한 시간·기대값 수정 없음.
   - 기존 골든 8개 모두 일치, 테스트·스냅샷 변경 없음. Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 헬퍼 호출 5곳을 원래 코드로 펼친 gui 전체 AST가 main과 동일. 누락/false/true 설정을 조합한 162개 사례에서 값·키 삽입 순서·update 횟수·비대상 값 유지 확인.
   - 전체 diff 자기 검토 완료: 검증 게이트·안전 조건·키 해제·호출 순서 유지. Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b6/`. 다음 항목은 B7.
-- [ ] B7 — 영역 나열 헬퍼
+- [x] B7 — 영역 나열 헬퍼 — 2026-10-27 / 153→153 통과(기준 검사 간헐 실패 재실행 포함), 골든 일치
+  - `config.regions(c, *, next_prefix="NEXT ")`로 영역 순회 6곳을 공통화. BOARD/HOLD/NEXT 순서와 None 보존, 검증·편집기의 `NEXT 1` 및 이미지 저장의 `NEXT1` 표기를 유지. 판독값을 결합하는 별도 순회(`next0` 포함)는 그대로 유지.
+  - 작업 전 전체 153개 중 152개 통과(26.480초), 시간 의존 `test_core.RecognitionTests.test_preview_cache_timestamp` 단독 1차 재실행 통과(0.054초). 작업 후 전체 153개 통과(26.837초), 포함된 골든 8개 모두 일치. 기존 테스트·기대값·스냅샷 수정 없음.
+  - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 공통 함수 호출을 원래 영역 나열식으로 펼친 config/gui/runtime 전체 AST가 main과 동일. 전체 diff 자기 검토 완료: 안전 조건·호출 순서·키 해제·사용자 문구 유지.
+  - Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b7/`. 다음 항목은 B8.
 - [ ] B8 — paths.py 경로 헬퍼
 - [ ] B9 — 설정값 c[k]로 통일
 - [ ] B10 — 안 쓰는 import 제거

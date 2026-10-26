@@ -5,7 +5,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import numpy as np
 from PIL import Image, ImageTk, ImageDraw
-from config import load, save, validate, PATH, union
+from config import load, save, validate, PATH, union, regions
 from detection import detect
 from windows import WindowSystem, shifted, same_size
 from input_win import WindowsBackend, KeyPulse
@@ -256,9 +256,7 @@ class App:
                 continue
             result = detect(desktop[y - vy : b - vy, x - vx : r - vx], (x, y), self.c.get("next_default_count", 1))
             if result["board"]:
-                visible, why = self.ws.visible_regions(
-                    z["hwnd"], [result["board"], result["hold"], *result["next_slots"]]
-                )
+                visible, why = self.ws.visible_regions(z["hwnd"], [b for _, b in regions(result)])
                 if not visible:
                     result["reasons"]["visibility"] = why
                     continue
@@ -457,9 +455,7 @@ class App:
             combo["values"] = ["BOARD", "HOLD"] + [f"NEXT {i + 1}" for i in range(len(draft["next_slots"]))]
 
         def boxes():
-            return [("BOARD", draft["board"]), ("HOLD", draft["hold"])] + [
-                (f"NEXT {i + 1}", b) for i, b in enumerate(draft["next_slots"])
-            ]
+            return regions(draft)
 
         def draw():
             canvas.delete("box")
@@ -1167,9 +1163,7 @@ class App:
         stem = folder / time.strftime("%Y%m%d_%H%M%S")
         im = Image.fromarray(rgb)
         d = ImageDraw.Draw(im)
-        for label, b in [("BOARD", self.c["board"]), ("HOLD", self.c["hold"])] + [
-            (f"NEXT{i + 1}", b) for i, b in enumerate(self.c["next_slots"])
-        ]:
+        for label, b in regions(self.c, next_prefix="NEXT"):
             if b:
                 x, y, r, z = b
                 d.rectangle((x - box[0], y - box[1], r - box[0], z - box[1]), outline="cyan", width=2)

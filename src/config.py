@@ -59,6 +59,12 @@ def load(path=PATH):
     return data
 
 
+def regions(c, *, next_prefix="NEXT "):
+    return [("BOARD", c["board"]), ("HOLD", c["hold"])] + [
+        (f"{next_prefix}{i + 1}", b) for i, b in enumerate(c["next_slots"])
+    ]
+
+
 def validate(c, complete=False):
     if not 1 <= c.get("score_level", 1) <= 30:
         raise ValueError("예측 점수 레벨은 1~30입니다.")
@@ -78,9 +84,7 @@ def validate(c, complete=False):
             "빌드 실행은 기본 Auto/프리뷰 실게임 검증과 JSON 선택, 회전 확인 및 continuous 모드가 필요합니다."
         )
     boxes = []
-    for label, box in [("BOARD", c["board"]), ("HOLD", c["hold"])] + [
-        (f"NEXT {i + 1}", b) for i, b in enumerate(c["next_slots"])
-    ]:
+    for label, box in regions(c):
         if box is None:
             if complete and label == "BOARD":
                 raise ValueError(label + " 영역을 지정하세요.")
@@ -144,7 +148,7 @@ def save(c, path=PATH):
 
 
 def union(c):
-    boxes = [b for b in [c["board"], c["hold"], *c["next_slots"]] if b]
+    boxes = [b for _, b in regions(c) if b]
     if not boxes:
         raise ValueError("영역을 먼저 설정하세요.")
     return (min(b[0] for b in boxes), min(b[1] for b in boxes), max(b[2] for b in boxes), max(b[3] for b in boxes))

@@ -1,7 +1,7 @@
 import threading, time, copy, multiprocessing, logging, traceback
 from queue import Queue, Empty
 from concurrent.futures import ProcessPoolExecutor
-from config import union, validate
+from config import union, validate, regions
 from recognition import Recognizer
 from planner import plan, urgent_plan
 from strategy import position_score
@@ -261,7 +261,7 @@ class Session:
                 self.c["client"] = new
                 self.revision += 1
                 self.observations.put(None)
-        boxes = [self.c["board"], self.c["hold"], *self.c["next_slots"]]
+        boxes = [b for _, b in regions(self.c)]
         visible, why = self.windows.visible_regions(target["hwnd"], boxes)
         self.visibility_error = "" if visible else why
         if not visible:
