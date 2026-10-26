@@ -1,4 +1,4 @@
-import time, copy
+import copy
 import numpy as np
 from PIL import Image, ImageDraw
 from config import DEFAULT

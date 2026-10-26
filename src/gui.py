@@ -3,10 +3,10 @@ from pathlib import Path
 from paths import app_root
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, filedialog
 import numpy as np
 from PIL import Image, ImageTk, ImageDraw
-from config import load, save, validate, PATH, union, regions
+from config import load, save, validate, PATH, regions
 from detection import detect
 from windows import WindowSystem, shifted, same_size
 from input_win import WindowsBackend, KeyPulse

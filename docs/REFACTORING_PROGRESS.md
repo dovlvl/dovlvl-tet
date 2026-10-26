@@ -61,8 +61,9 @@
   - Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b7/`. 다음 항목은 B8.
 - [x] B8 — paths.py 경로 헬퍼 — 2026-10-27 / 153→153 통과, 골든 일치
   - paths.py로 4곳의 경로 계산 이동. GUI의 실행 파일 resolve 유무 및 _MEIPASS 동작 보존, 임베디드 모듈 필수 목록 갱신. 일반/배포·상대/절대 경로 비교 통과. Ruff 포맷 통과·진단 170→169, 시작 started=true/auto_running=false. 전체 diff 자기 검토: 안전 조건·호출 순서·문구 유지. 실제 Auto·입력 진단 실행 안 함. 로그 diagnostics/refactor_b8/.
-- [-] B9 — 설정값 c[k]로 통일 — 2026-10-27 / DEFAULT를 거치지 않은部分 설정 경로가 있어 가이드에 따라 건너뜀. tests/test_startup_connect.py의 부분 app.c 및 tests/test_golden.py의 route_feasible(..., {})가 존재하므로 get 기본값 제거 시 동작이 바뀔 수 있음. 코드 변경 없음.
-- [ ] B10 — 안 쓰는 import 제거
+- [-] B9 — 설정값 c[k]로 통일 — 2026-10-27 / DEFAULT를 거치지 않은 부분 설정 경로가 있어 가이드에 따라 건너뜀. tests/test_startup_connect.py의 부분 app.c 및 tests/test_golden.py의 route_feasible(..., {})가 존재하므로 get 기본값 제거 시 동작이 바뀔 수 있음. 코드 변경 없음.
+- [x] B10 — 안 쓰는 import 제거 — 2026-10-27 / 153→153 통과, 골든 일치
+  - 사용처 검색 후 미사용 import 26개 제거. import 이외 전체 AST 동일, 테스트·기대값·골든 변경 없음. Ruff 포맷 통과·진단 169→143, 시작 started=true/auto_running=false. 전체 diff 자기 검토: 안전 조건·호출 순서·문구 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_b10/.
 
 ## 테스트·빌드 정리
 - [ ] T1 — 테스트 sys.path 일원화, Source를 helpers.py로 이동

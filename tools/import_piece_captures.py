@@ -9,7 +9,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from detection import detect
-from recognition import sample_board, components
+from recognition import sample_board
 from geometry import orientations, cellset
 
 

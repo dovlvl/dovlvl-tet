@@ -2,7 +2,6 @@
 
 from functools import lru_cache
 from paths import resource_root
-from geometry import evaluate
 from geometry import board_metrics as metrics
 from planner import plan
 

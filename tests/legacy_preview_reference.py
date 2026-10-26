@@ -3,7 +3,7 @@
 import time, zlib
 import numpy as np
 from model import Active, Reading, Observation
-from geometry import SHAPES, orientations
+from geometry import orientations
 
 KINDS = ("", "Z", "L", "O", "S", "I", "J", "T")
 PALETTE = {

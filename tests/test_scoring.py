@@ -1,8 +1,8 @@
-import sys, unittest, copy, time
+import sys, unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from scoring import award, tspin, ScoreState, SITE_RULES
+from scoring import award, tspin, ScoreState
 from strategy import auto_plan, builtin_book
 from planner import landings
 from geometry import advance, orientations, settle

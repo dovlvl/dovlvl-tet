@@ -5,7 +5,7 @@ from functools import lru_cache
 from dataclasses import replace
 import numpy as np
 from model import Active, Reading, Observation
-from geometry import SHAPES, orientations, fits, settle, hard_drop
+from geometry import orientations, fits, settle, hard_drop
 from geometry import cellset as cellset
 from piece_library import hue_centers, shape_rotations
 

@@ -1,6 +1,5 @@
 """Pure board search. Coordinates: x right, y down; visible board 10x20."""
 
-from collections import deque
 from functools import lru_cache
 
 SHAPES = {

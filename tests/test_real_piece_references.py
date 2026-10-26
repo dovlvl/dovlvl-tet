@@ -1,4 +1,4 @@
-import sys, json, time, copy, unittest
+import sys, time, copy, unittest
 from pathlib import Path
 import numpy as np
 from PIL import Image

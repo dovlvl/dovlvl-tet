@@ -1,8 +1,7 @@
-import sys, unittest, time, copy, json
+import sys, unittest, time, copy
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from unittest.mock import patch
 import numpy as np
 from PIL import Image, ImageDraw
 from recognition import PreviewCache, Recognizer, PALETTE

@@ -3,10 +3,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from helpers import *
-from recognition import Recognizer, PreviewCache, sample_board
+from recognition import Recognizer
 from input_win import KeyPulse, VK
 from controller import AutoController
-from planner import plan, landings, route_to
+from planner import plan, landings
 from geometry import rotate
 from config import validate, save, load
 

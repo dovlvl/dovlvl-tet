@@ -4,7 +4,7 @@ from collections import deque
 from functools import lru_cache
 from time import perf_counter
 from geometry import orientations, advance, fits, settle, evaluate, cellset, hard_drop, kick_offsets, board_metrics
-from scoring import tspin, award, ScoreState, SITE_RULES
+from scoring import tspin, award, ScoreState
 from dataclasses import asdict
 
 

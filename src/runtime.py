@@ -3,7 +3,7 @@ from queue import Queue, Empty
 from concurrent.futures import ProcessPoolExecutor
 from config import union, validate, regions
 from recognition import Recognizer
-from planner import plan, urgent_plan
+from planner import urgent_plan
 from strategy import position_score
 from strategy import auto_plan
 from openers import load_book, opener_plan

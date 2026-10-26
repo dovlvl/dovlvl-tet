@@ -1,6 +1,6 @@
 """Generate an evidence-based report from completed JSON comparisons."""
 
-import json, re, hashlib, statistics
+import json, re, hashlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
