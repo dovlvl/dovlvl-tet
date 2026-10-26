@@ -75,7 +75,9 @@
   - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 ; 변경 후 test_core.RecognitionTests.test_preview_cache_timestamp. 제한 시간·기대값 유지.
 
 ## CI — GitHub Actions 검증 추가 (T3 다음, C1 전)
-- [ ] CI — GitHub Actions 검증 추가
+- [x] CI — GitHub Actions 검증 추가 — 2026-10-27 / 153→153 통과, 골든 일치
+  - main 업로드마다 windows-latest/Python 3.12에서 잠금 의존성·Ruff 0.14.2 설치 후 포맷·진단 기준값(113)·전체 unittest 검사. 실패 테스트만 최대 2회 재실행. 로컬 153개·골든·Ruff 통과, GitHub 첫 CI 성공 확인: https://github.com/dovlvl/dovlvl-tet/actions/runs/40367946140 . src·기존 테스트·안전 동작 변경 없음. 실제 키 입력·GUI·시작 검사 실행 안 함.
+  - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 . 제한 시간·기대값 유지.
   - `.github/workflows/ci.yml`: main push마다 windows-latest, Python 3.12. 잠금 의존성·지정 Ruff 설치 → 포맷 검사 → 전체 unittest(골든 포함).
   - Ruff 진단 수는 기준값 파일보다 증가할 때만 실패. 시간 의존 테스트 실패 시 해당 테스트만 최대 2회 재실행하며 제한 시간·기대값은 유지.
   - CI에서 실제 키 입력·GUI 실행·시작 검사 금지. 다른 항목과 같은 검증 게이트 통과 및 push 후 첫 CI 실행 성공 확인까지 완료 조건.
