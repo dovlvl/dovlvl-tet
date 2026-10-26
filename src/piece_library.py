@@ -1,8 +1,8 @@
 """Validated references from real game screenshots; no runtime image guessing."""
 
 from functools import lru_cache
-from pathlib import Path
-import json, sys
+from paths import resource_root
+import json
 from geometry import orientations
 
 
@@ -14,7 +14,7 @@ def normalize(cells):
 
 @lru_cache(maxsize=1)
 def library():
-    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
+    root = resource_root()
     path = root / "data" / "pieces" / "templates.json"
     if not path.exists():
         return None

@@ -4,6 +4,7 @@ import json, time, threading, platform, sys
 from collections import defaultdict, deque
 from pathlib import Path
 from queue import Queue, Empty, Full
+from paths import app_root
 
 
 class Telemetry:
@@ -13,7 +14,7 @@ class Telemetry:
         self.events = Queue(maxsize=32)
         self.dropped = 0
         self.closed = threading.Event()
-        root = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parents[1]
+        root = app_root()
         self.folder = Path(folder) if folder else root / "diagnostics" / "sessions" / time.strftime("%Y%m%d_%H%M%S")
         self.thread = None
         self.started = time.monotonic()

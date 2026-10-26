@@ -59,7 +59,8 @@
   - 작업 전 전체 153개 중 152개 통과(26.480초), 시간 의존 `test_core.RecognitionTests.test_preview_cache_timestamp` 단독 1차 재실행 통과(0.054초). 작업 후 전체 153개 통과(26.837초), 포함된 골든 8개 모두 일치. 기존 테스트·기대값·스냅샷 수정 없음.
   - Ruff 0.14.2 포맷 검사 통과, 진단 170→170. 공통 함수 호출을 원래 영역 나열식으로 펼친 config/gui/runtime 전체 AST가 main과 동일. 전체 diff 자기 검토 완료: 안전 조건·호출 순서·키 해제·사용자 문구 유지.
   - Windows 시작 검사 `started=true`, `auto_running=false`. 실제 Auto·입력 진단 실행 안 함. 로컬 검증 로그: `diagnostics/refactor_b7/`. 다음 항목은 B8.
-- [ ] B8 — paths.py 경로 헬퍼
+- [x] B8 — paths.py 경로 헬퍼 — 2026-10-27 / 153→153 통과, 골든 일치
+  - paths.py로 4곳의 경로 계산 이동. GUI의 실행 파일 resolve 유무 및 _MEIPASS 동작 보존, 임베디드 모듈 필수 목록 갱신. 일반/배포·상대/절대 경로 비교 통과. Ruff 포맷 통과·진단 170→169, 시작 started=true/auto_running=false. 전체 diff 자기 검토: 안전 조건·호출 순서·문구 유지. 실제 Auto·입력 진단 실행 안 함. 로그 diagnostics/refactor_b8/.
 - [ ] B9 — 설정값 c[k]로 통일
 - [ ] B10 — 안 쓰는 import 제거
 

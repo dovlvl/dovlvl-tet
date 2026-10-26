@@ -1,5 +1,6 @@
 import sys, time, copy, json, logging
 from pathlib import Path
+from paths import app_root
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
@@ -1143,11 +1144,7 @@ class App:
     def export_log(self):
         import shutil
 
-        folder = (
-            Path(sys.executable).resolve().parent
-            if getattr(sys, "frozen", False)
-            else Path(__file__).resolve().parents[1]
-        ) / "diagnostics"
+        folder = app_root(resolve_executable=True) / "diagnostics"
         folder.mkdir(exist_ok=True)
         for f in PATH.parent.glob("trainer.log*"):
             shutil.copy2(f, folder / f.name)

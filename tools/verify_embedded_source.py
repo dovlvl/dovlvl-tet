@@ -48,6 +48,7 @@ for p in sorted((root / "src").glob("*.py")):
     results[p.name] = signature(pyz.extract(p.stem)) == signature(compile(p.read_bytes(), str(p), "exec"))
 required = {
     "trainer.py",
+    "paths.py",
     "gui.py",
     "ui_status.py",
     "controller.py",

@@ -1,8 +1,7 @@
 """Adaptive, bounded Auto policy. Sources and limits: docs/AUTO_STRATEGY_KO.md."""
 
 from functools import lru_cache
-from pathlib import Path
-import sys
+from paths import resource_root
 from geometry import evaluate
 from geometry import board_metrics as metrics
 from planner import plan
@@ -42,7 +41,7 @@ def position_score(board, lines):
 def builtin_book():
     from openers import load_book, compile_book, mirrored_variant
 
-    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
+    root = resource_root()
     book = load_book(root / "data" / "openers" / "TKI_Fonzie.json")
     book["variants"].append(mirrored_variant(book["variants"][0]))
     return compile_book(book)
