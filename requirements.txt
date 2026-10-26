@@ -2,4 +2,3 @@ numpy>=2,<3
 opencv-python-headless>=4.10,<5
 Pillow>=10,<13
 mss>=9,<11
-pyinstaller>=6,<7
