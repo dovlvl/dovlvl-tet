@@ -142,19 +142,69 @@ class OpenerTests(unittest.TestCase):
     def test_wrong_board_stops_instead_of_forcing_build(self):
         b = [[0] * 10 for _ in range(20)]
         b[19][0] = 1
-        p = opener_plan(self.book, 0, None, b, "I", (3, 0, 0), None, ["L"], False, True, True)
+        p = opener_plan(
+            book=self.book,
+            index=0,
+            chosen=None,
+            board=b,
+            kind="I",
+            start=(3, 0, 0),
+            held=None,
+            queue=["L"],
+            hold_used=False,
+            hold_available=True,
+            rotation=True,
+        )
         self.assertIsNone(p["result"])
         self.assertIn("CONDITION", p["reason"])
 
     def test_visible_hold_only_and_single_hold_limit(self):
         b = [[0] * 10 for _ in range(20)]
-        ok = opener_plan(self.book, 0, None, b, "T", (3, 0, 0), "I", ["L"], False, True, True)
+        ok = opener_plan(
+            book=self.book,
+            index=0,
+            chosen=None,
+            board=b,
+            kind="T",
+            start=(3, 0, 0),
+            held="I",
+            queue=["L"],
+            hold_used=False,
+            hold_available=True,
+            rotation=True,
+        )
         self.assertTrue(ok["result"]["hold"])
         for used, available in ((True, True), (False, False)):
             self.assertIsNone(
-                opener_plan(self.book, 0, None, b, "T", (3, 0, 0), "I", ["L"], used, available, True)["result"]
+                opener_plan(
+                    book=self.book,
+                    index=0,
+                    chosen=None,
+                    board=b,
+                    kind="T",
+                    start=(3, 0, 0),
+                    held="I",
+                    queue=["L"],
+                    hold_used=used,
+                    hold_available=available,
+                    rotation=True,
+                )["result"]
             )
-        self.assertIsNone(opener_plan(self.book, 0, None, b, "T", (3, 0, 0), None, ["?"], False, True, True)["result"])
+        self.assertIsNone(
+            opener_plan(
+                book=self.book,
+                index=0,
+                chosen=None,
+                board=b,
+                kind="T",
+                start=(3, 0, 0),
+                held=None,
+                queue=["?"],
+                hold_used=False,
+                hold_available=True,
+                rotation=True,
+            )["result"]
+        )
 
     def test_tki_closed_loop_seven_simulated_placements(self):
         c = copy.deepcopy(C)
@@ -173,17 +223,17 @@ class OpenerTests(unittest.TestCase):
             o = r.process(g.image(), (0, 0, 340, 400), c, i, now)
             if ctl.running and o.valid and not ctl.plan and not ctl.wait:
                 packet = opener_plan(
-                    self.book,
-                    ctl.blocks,
-                    ctl.opener_variant,
-                    o.fixed,
-                    o.active.kind,
-                    o.active.state,
-                    o.hold.kind,
-                    list(o.queue),
-                    ctl.hold_used,
-                    True,
-                    True,
+                    book=self.book,
+                    index=ctl.blocks,
+                    chosen=ctl.opener_variant,
+                    board=o.fixed,
+                    kind=o.active.kind,
+                    start=o.active.state,
+                    held=o.hold.kind,
+                    queue=list(o.queue),
+                    hold_used=ctl.hold_used,
+                    hold_available=True,
+                    rotation=True,
                 )
                 packet["key"] = (o.board_key, o.active.kind, ctl.hold_used)
                 ctl.accept_plan(packet, o)

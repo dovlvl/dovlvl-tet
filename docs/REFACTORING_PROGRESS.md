@@ -85,7 +85,9 @@
 ## 단계 C — 구조 개선
 - [x] C1 — 상태 속성 __init__/reset에 명시 — 2026-10-27 / 153→153 통과, 골든 일치
   - 기존 getattr 기본값으로 상태 필드 선언, start의 동적 삭제를 같은 초기 상태로 대체. Recognizer.reset이 추적 상태를 보존하던 동작 유지, 기준/수정 인식기 7프레임 및 reset 전후 출력 비교 일치. ack_bound의 0/None은 timing_profile의 기존 or 0 처리와 같은 결과. Ruff 포맷·진단 113 유지, 전체 diff 자기 검토: 안전 조건·키 해제·순서·문구 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c1/.
-- [ ] C2 — auto_plan/opener_plan 키워드 인자화
+- [x] C2 — auto_plan/opener_plan 키워드 인자화 — 2026-10-27 / 153→153 통과, 골든 일치
+  - auto_plan/opener_plan 및 pool.submit 포함 호출 17곳에 인자 이름 명시. 인자 평가 순서·식·기본값 보존, 키워드 형태로 정규화한 변경 모듈 전체 AST가 기준과 동일. Ruff 포맷·진단 113 유지, 시작 started=true/auto_running=false. 전체 diff 자기 검토: 안전 조건·순서·문구 및 테스트 기대값 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c2/.
+  - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 . 제한 시간·기대값 유지.
 - [ ] C3 — PendingAction dataclass, Phase Enum
 - [ ] C4 — Placement dataclass
 - [ ] C5 — Observation 필드 정리

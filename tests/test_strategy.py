@@ -13,27 +13,54 @@ class AdaptiveAutoTests(unittest.TestCase):
         for index, step in enumerate(steps):
             board = [list(row) for row in step["expected_before"]]
             queue = [s["kind"] for s in steps[index + 1 :]] + list("ILOSZJT")
-            p = auto_plan(board, step["kind"], (3, 0, 0), None, queue, False, previews=True, basic_verified=True)
+            p = auto_plan(
+                board=board,
+                kind=step["kind"],
+                start=(3, 0, 0),
+                held=None,
+                nexts=queue,
+                use_hold=False,
+                previews=True,
+                basic_verified=True,
+            )
             self.assertTrue(p["result"]["strategy"].startswith("TKI"), (index, p))
             self.assertEqual(set(map(tuple, p["result"]["cells"])), set(map(tuple, step["cells"])))
         board = [list(row) for row in steps[-1]["expected_after"]]
-        result = auto_plan(board, "I", (3, 0, 0), None, ["L", "O"], False, opening=False)["result"]
+        result = auto_plan(
+            board=board, kind="I", start=(3, 0, 0), held=None, nexts=["L", "O"], use_hold=False, opening=False
+        )["result"]
         self.assertIsNotNone(result)
         self.assertNotIn("TKI", result["strategy"])
 
     def test_wrong_queue_falls_back_instead_of_stopping(self):
         b = [[0] * 10 for _ in range(20)]
-        p = auto_plan(b, "O", (3, 0, 0), None, ["S", "Z"], False, previews=True, basic_verified=True)
+        p = auto_plan(
+            board=b,
+            kind="O",
+            start=(3, 0, 0),
+            held=None,
+            nexts=["S", "Z"],
+            use_hold=False,
+            previews=True,
+            basic_verified=True,
+        )
         self.assertIsNotNone(p["result"])
         self.assertNotIn("TKI", p["result"]["strategy"])
 
     def test_preview_gate_prevents_unverified_opener(self):
-        p = auto_plan([[0] * 10 for _ in range(20)], "I", (3, 0, 0), None, list("LJOSZT"), False)
+        p = auto_plan(
+            board=[[0] * 10 for _ in range(20)],
+            kind="I",
+            start=(3, 0, 0),
+            held=None,
+            nexts=list("LJOSZT"),
+            use_hold=False,
+        )
         self.assertNotIn("TKI", p["result"]["strategy"])
 
     def test_tetris_and_perfect_clear_take_priority(self):
         b = [[0] * 10 for _ in range(16)] + [[1] * 9 + [0] for _ in range(4)]
-        a = auto_plan(b, "O", (3, 0, 0), "I", ["L", "T"], True)["result"]
+        a = auto_plan(board=b, kind="O", start=(3, 0, 0), held="I", nexts=["L", "T"], use_hold=True)["result"]
         self.assertTrue(a["hold"])
         self.assertEqual(a["lines"], 4)
         self.assertEqual(a["strategy"], "Perfect Clear")

@@ -102,18 +102,18 @@ def auto_plan(
                 if not possible:
                     continue
                 packet = opener_plan(
-                    book,
-                    index,
-                    variant["name"],
-                    board,
-                    kind,
-                    start,
-                    held,
-                    nexts,
-                    not allow_hold,
-                    use_hold and allow_hold,
-                    rotation,
-                    counterclockwise,
+                    book=book,
+                    index=index,
+                    chosen=variant["name"],
+                    board=board,
+                    kind=kind,
+                    start=start,
+                    held=held,
+                    queue=nexts,
+                    hold_used=not allow_hold,
+                    hold_available=use_hold and allow_hold,
+                    rotation=rotation,
+                    counterclockwise=counterclockwise,
                 )
                 if packet["result"]:
                     from geometry import advance

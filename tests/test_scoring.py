@@ -47,7 +47,16 @@ class SiteScoreTests(unittest.TestCase):
         step = builtin_book()["variants"][0]["steps"][-1]
         b = [list(row) for row in step["expected_before"]]
         packet = auto_plan(
-            b, "T", (3, 0, 0), None, [], False, opening=False, budget_ms=600, max_depth=1, counterclockwise=True
+            board=b,
+            kind="T",
+            start=(3, 0, 0),
+            held=None,
+            nexts=[],
+            use_hold=False,
+            opening=False,
+            budget_ms=600,
+            max_depth=1,
+            counterclockwise=True,
         )
         a = packet["result"]
         self.assertEqual(a["spin"], "full", packet)
@@ -63,7 +72,16 @@ class SiteScoreTests(unittest.TestCase):
 
     def test_rotation_and_hold_find_immediate_tetris_pc(self):
         b = [[0] * 10 for _ in range(16)] + [[1] * 9 + [0] for _ in range(4)]
-        a = auto_plan(b, "O", (3, 0, 0), "I", ["L", "T"], True, opening=False, counterclockwise=True)["result"]
+        a = auto_plan(
+            board=b,
+            kind="O",
+            start=(3, 0, 0),
+            held="I",
+            nexts=["L", "T"],
+            use_hold=True,
+            opening=False,
+            counterclockwise=True,
+        )["result"]
         self.assertTrue(a["hold"])
         self.assertEqual(a["lines"], 4)
         self.assertTrue(a["perfect_clear"])
@@ -72,12 +90,12 @@ class SiteScoreTests(unittest.TestCase):
 
     def test_insufficient_known_queue_does_not_claim_opener(self):
         a = auto_plan(
-            [[0] * 10 for _ in range(20)],
-            "I",
-            (3, 0, 0),
-            None,
-            ["L"],
-            False,
+            board=[[0] * 10 for _ in range(20)],
+            kind="I",
+            start=(3, 0, 0),
+            held=None,
+            nexts=["L"],
+            use_hold=False,
             previews=True,
             basic_verified=True,
             budget_ms=100,
@@ -89,6 +107,16 @@ class SiteScoreTests(unittest.TestCase):
         for y in range(8, 20):
             b[y][5] = 1
         b[19] = [1] * 8 + [0, 0]
-        a = auto_plan(b, "O", (0, 16, 0), "O", [], True, opening=False, budget_ms=300, max_depth=1)["result"]
+        a = auto_plan(
+            board=b,
+            kind="O",
+            start=(0, 16, 0),
+            held="O",
+            nexts=[],
+            use_hold=True,
+            opening=False,
+            budget_ms=300,
+            max_depth=1,
+        )["result"]
         self.assertTrue(a["hold"])
         self.assertEqual(a["lines"], 1)
