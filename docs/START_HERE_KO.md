@@ -2,7 +2,7 @@
 
 > 최신 실행·두 줄 UI·설정 경로는 루트 [README](../README.md)를 기준으로 합니다.
 > 아래 설명은 이전 UI의 진단 기록이며 현재 메인 화면에 고급 메뉴는 없습니다.
-> 과거 판독 비교 코드는 테스트 전용이고, 비교 CLI는 `tools/preview_compare.py`에 있습니다.
+> 과거 판독 비교 코드는 테스트 전용입니다.
 
 run_windows.bat(Python 3.11+ x64) 또는 dist/TetrisAuto.exe를 실행합니다. 일반 Chrome/Edge + Windows 캡처 방식입니다. F6 시작·중지 / F8 긴급 중지와 키 해제. 새 기본값은 continuous이며 Auto 전략 설명은 AUTO_STRATEGY_KO.md를 참고하세요. 입력 진단·영역 수정·프리뷰 진단은 고급 메뉴로 이동했습니다.
 
@@ -14,13 +14,6 @@ run_windows.bat(Python 3.11+ x64) 또는 dist/TetrisAuto.exe를 실행합니다.
 6. 오프너는 위 검증 뒤에 사용합니다. ‘빌드 JSON 가져오기’에서 data/openers/TKI_Fonzie.json 선택. 이는 Blox의 명시적 7단계 1변형이며 전체 TKI 큐 조건을 지원하지 않습니다. 가져오기만으로 실행하지 않습니다. 설정에서 현재 게임 프리뷰/기본 Auto 실제 검증 완료를 기록하고 continuous·회전 확인 후 빌드 실행을 체크하세요. HOLD가 필요하다면 키 C 및 HOLD 사용도 별도로 활성화하세요. 조건 불일치 시 이유를 표시하고 중지합니다.
 7. 설정 창은 세로 스크롤됩니다. 대상/영역/키/인식 임계값이 바뀌면 관련 검증을 다시 수행하세요. 전역 키 등록 오류가 있으면 설정에서 F1~F24 중 다른 키로 바꿀 수 있습니다.
 
-## 실제 캡처 전후 비교
-전체 무주석 캡처와 같은 이름의 메타데이터 JSON을 준비합니다. 예:
-```
-.venv\Scripts\python tools\preview_compare.py diagnostics\20261025_120000_raw.png diagnostics\20261025_120000.json --output real_comparison
-```
-비교 JSON에 이전 판독/새 판독을 함께 기록하고 슬롯별 원본·마스크·정규화를 저장합니다. 실제 정답은 사용자가 직접 확인해야 하며 프로그램이 정확도를 자동 인증하지 않습니다. 
-
 ## 빌드 데이터 지원 형식
 data/openers/TKI_Fonzie.json이 실제 지원 데이터입니다. tetris-opener-v1 JSON: 출처 source, 이름 name, 좌표 visible-10x20-x-right-y-down, 변형 배열 variants, 각 변형의 name/order_status=explicit/hold_policy=visible-only-single-hold, 단계별 kind와 네 개의 절대 cells가 필수입니다. x=0~9 좌→우, y=0~19 위→아래. 실행 회전 r=0~3 시계 방향/SRS이며 cells가 기준입니다. 검증 시 expected_before/expected_after/lines/state를 계산하고 기존 값이 있으면 일치를 검사합니다. 초기 보드는 빈 보드만 지원합니다. 완료는 모든 단계 고정/보드 확인, 실패는 보드·큐·HOLD·경로·입력 확인 불일치입니다. 동적 조건, 순서 없는 완성 모양, 알 수 없는 분기 데이터는 실행하지 않습니다.
 
@@ -28,7 +21,7 @@ data/openers/TKI_Fonzie.json이 실제 지원 데이터입니다. tetris-opener-
 ```
 .venv\Scripts\python src\blox_import.py opener-module.js imported.json --name TKI --variation Fonzie --url https://blox-server.herokuapp.com/js/dist/chunks/opener-NCSNWVO7.js
 ```
-사이트 갱신으로 구문이 달라지면 실패하도록 구현했습니다. 내려받지 못했거나 원본에 순서가 없으면 이를 학습/실행 가능으로 취급하지 않습니다. 네트워크 접근 및 자료 사용 조건은 출처를 확인하세요. Blox 키 프로필은 data/site_profiles.json에 참고용으로만 있습니다.
+사이트 갱신으로 구문이 달라지면 실패하도록 구현했습니다. 내려받지 못했거나 원본에 순서가 없으면 이를 학습/실행 가능으로 취급하지 않습니다. 네트워크 접근 및 자료 사용 조건은 출처를 확인하세요.
 
 검증/제한: 실제 게임과 사용자 캡처 비교는 미검증입니다.
 

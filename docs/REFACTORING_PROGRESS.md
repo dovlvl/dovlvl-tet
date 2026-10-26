@@ -70,7 +70,9 @@
   - tests/bootstrap.py로 경로 설정 일원화, Source 본문을 helpers.py로 그대로 이동하고 4곳 import 갱신. 테스트·기대값·골든 유지. Ruff 포맷 통과·진단 142→142, 전체 diff 자기 검토: 테스트 본문 및 src 변경 없음. 실제 입력 실행 안 함. 로그 diagnostics/refactor_t1/.
 - [x] T2 — requirements-dev.txt 분리, Python 버전 문구 통일 — 2026-10-27 / 153→153 통과, 골든 일치
   - requirements.txt의 PyInstaller를 requirements-dev.txt로 분리하고 Ruff 0.14.2 명시, 빌드는 잠금 파일과 개발 의존성 모두 설치. 기존 잠금 파일 유지. Python 3.12 안내 통일. 의존성 dry-run·Ruff 포맷 통과, 진단 142 유지. 전체 diff 자기 검토: src·테스트·안전 동작 변경 없음. 로그 diagnostics/refactor_t2/.
-- [ ] T3 — 안 쓰는 추적 파일 정리 (삭제 전 사용 여부 확인, 유지 목록 보존, 전체 테스트·골든·Ruff·시작 검사 필수)
+- [x] T3 — 안 쓰는 추적 파일 정리 (삭제 전 사용 여부 확인, 유지 목록 보존, 전체 테스트·골든·Ruff·시작 검사 필수) — 2026-10-27 / 153→153 통과, 골든 일치
+  - 가이드의 삭제 후보 16개 모두 남는 src/tests/tools 및 실행 스크립트에서 사용하지 않음을 검색 확인 후 삭제. src·tests·골든·필수 도구·나머지 data 보존. 삭제 파일의 문서 참조만 정리. Ruff 포맷 통과·진단 142→113, 시작 started=true/auto_running=false. 전체 변경 목록·diff 자기 검토 완료, 실제 입력 실행 안 함. 로그 diagnostics/refactor_t3/.
+  - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 ; 변경 후 test_core.RecognitionTests.test_preview_cache_timestamp. 제한 시간·기대값 유지.
 
 ## CI — GitHub Actions 검증 추가 (T3 다음, C1 전)
 - [ ] CI — GitHub Actions 검증 추가

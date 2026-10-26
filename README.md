@@ -3,7 +3,7 @@
 실행 파일: [dist/TetrisAuto.exe](dist/TetrisAuto.exe)
 
 현재 실행·빌드 기준은 **루트 `src/`** 하나입니다. `release/`의 압축 해제본은 보존한 입력 자료이며
-빌드에 사용하지 않습니다. 병합 상태는 [PROJECT_STATUS.md](PROJECT_STATUS.md), 바이너리 관리 기준은
+빌드에 사용하지 않습니다. 바이너리 관리 기준은
 [배포 정책](docs/RELEASE_POLICY.md)을 참고하세요.
 
 Windows 10/11 x64와 Chrome용입니다. EXE에는 Python과 GUI 라이브러리가 포함됩니다.
@@ -48,7 +48,7 @@ T스핀은 마지막 회전과 모서리 조건을 검사합니다. 남은 순�
 미확인 콤보·PC 추가 보너스와 미니 점수는 다른 게임에서 가져오지 않았습니다.
 현재 사이트의 T스핀 판정과 고정 규칙 일치는 실게임 미검증입니다.
 
-[전후 검증 보고서](docs/VALIDATION_REPORT_KO.md)와 [자료별 적용 범위](docs/STRATEGY_SOURCES_KO.md)를 확인하세요.
+[자료별 적용 범위](docs/STRATEGY_SOURCES_KO.md)를 확인하세요.
 
 ## 파일
 
@@ -67,9 +67,5 @@ T스핀은 마지막 회전과 모서리 조건을 검사합니다. 남은 순�
 
 소스 실행·빌드에는 Tcl/Tk가 포함된 Windows Python이 필요합니다. 검증한 버전은 Python 3.12.14 x64입니다.
 `run_windows.bat`은 필요한 경우 고정 의존성을 설치하고 실행합니다. `build_windows.bat`은 테스트·EXE 빌드·시작 검사를 수행합니다.
-
-전후 비교 재현: `.venv\Scripts\python.exe tools\run_revision_benchmarks.py`.
-배포 ZIP에는 비교용 원본 소스와 같은 기준 데이터를 `diagnostics/revision_baseline/`에 포함합니다.
-ZIP 생성은 `tools/package_release.py`이며 실제 빌드·내장 소스 일치 검사 통과가 필요합니다.
 
 개인 설정은 `%USERPROFILE%\.tetris_trainer\`에 있습니다.
