@@ -52,7 +52,7 @@ TIME_FIELDS = {
 
 
 def canonical(value):
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, dict):
         value = asdict(value)
     if isinstance(value, np.ndarray):
         value = value.tolist()
@@ -72,7 +72,7 @@ def canonical(value):
 
 
 def without_times(value):
-    if is_dataclass(value):
+    if is_dataclass(value) and not isinstance(value, dict):
         value = asdict(value)
     if isinstance(value, dict):
         return {key: without_times(item) for key, item in value.items() if key not in TIME_FIELDS}

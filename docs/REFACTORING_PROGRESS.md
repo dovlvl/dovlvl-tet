@@ -91,7 +91,9 @@
 - [x] C3 — PendingAction dataclass, Phase Enum — 2026-10-27 / 153→153 통과, 골든 일치
   - PendingAction dataclass로 대기 정보 필드 선언, Phase StrEnum은 기존 문자열 값·표시·JSON·동등 비교 유지. 누락 필드 기본값과 expected_board의 관측 보드 기본값 보존. pickle 왕복 검사·전체 테스트·골든·Ruff 포맷 통과, 진단 113 유지, 시작 started=true/auto_running=false. 전체 diff 자기 검토: F8·포커스·세대·나이 제한·입력 확인·키 해제 조건 및 순서 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c3/.
   - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 . 제한 시간·기대값 유지.
-- [ ] C4 — Placement dataclass
+- [x] C4 — Placement dataclass — 2026-10-27 / 153→153 통과, 골든 일치
+  - Placement dataclass는 기존 dict 호환을 유지해 선택적 키·복사·비교·JSON 형식 보존. 324개 결정적 배치의 키 순서 포함 JSON 및 pickle 왕복이 기준과 정확히 일치. 골든 변환기는 dict 호환 자료형을 기존 매핑 경로로 처리하며 기대값·스냅샷 불변. 프로세스 파이프라인 포함 전체 테스트·Ruff 포맷 통과, 진단 113 유지. 전체 diff 자기 검토: 계산식·안전 조건·순서·문구 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c4/.
+  - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 test_core.RecognitionTests.test_preview_cache_timestamp. 제한 시간·기대값 유지.
 - [ ] C5 — Observation 필드 정리
 - [ ] C6 — 사유 코드 enum
 

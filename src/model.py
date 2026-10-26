@@ -105,3 +105,31 @@ class PendingAction:
     resync_checked: bool = False
     resynchronized: bool = False
     mismatch_logged: bool = False
+
+
+@dataclass(init=False, repr=False, eq=False)
+class Placement(dict):
+    """Named placement fields with the existing sparse mapping/JSON contract.
+
+    Optional scoring and opener metadata retain their original key presence.
+    Keep dict construction, copies, equality and serialization during migration.
+    """
+
+    kind: str
+    x: int
+    y: int
+    r: int
+    cells: list
+    board: list
+    lines: int
+    path: tuple
+    score: float
+
+    def __getattr__(self, name):
+        try:
+            return self[name]
+        except KeyError as error:
+            raise AttributeError(name) from error
+
+    def __setattr__(self, name, value):
+        self[name] = value

@@ -6,6 +6,7 @@ from time import perf_counter
 from geometry import orientations, advance, fits, settle, evaluate, cellset, hard_drop, kick_offsets, board_metrics
 from scoring import tspin, award, ScoreState
 from dataclasses import asdict
+from model import Placement
 
 
 class BudgetExpired(Exception):
@@ -72,7 +73,7 @@ def landings(
         result_key = (cells, spin)
         if result_key not in result:
             b, lines = settle(board, shapes[r], x, dy)
-            result[result_key] = dict(
+            result[result_key] = Placement(
                 kind=kind,
                 x=x,
                 y=dy,
@@ -185,7 +186,7 @@ def basic_candidates(
             if timing and not route_feasible(board, kind, start, path, cells, timing)[0]:
                 continue
             b, lines = settle(board, p, x, y)
-            results[cells] = dict(
+            results[cells] = Placement(
                 kind=kind,
                 x=x,
                 y=y,
@@ -276,7 +277,7 @@ def plan(
         )
         following = event.pop("score_state")
         event["scoring_after"] = asdict(following)
-        return dict(a, **event), following, event["expected_points"] / max(1, state.level) / 25
+        return Placement(a, **event), following, event["expected_points"] / max(1, state.level) / 25
 
     def spawn_safe(b, q):
         if not any(b[0]) and not any(b[1]):
@@ -336,14 +337,14 @@ def plan(
                         continue
                 if hold:
                     held_candidates += 1
-                yield dict(a, hold=hold), nh, nq
+                yield Placement(a, hold=hold), nh, nq
 
     best = None
     if not timing and fits(board, orientations(kind)[start[2]], *start[:2]):
         x, y, r = start
         y = hard_drop(board, orientations(kind)[r], x, y)
         b, l = settle(board, orientations(kind)[r], x, y)
-        best = dict(
+        best = Placement(
             kind=kind,
             x=x,
             y=y,
@@ -379,13 +380,13 @@ def plan(
             scorer,
             min(deadline, begin + min(18, budget_ms * 0.25) / 1000),
         )
-        initial.extend(dict(a, hold=True) for a in held_initial)
+        initial.extend(Placement(a, hold=True) for a in held_initial)
     initial = [a for a in initial if spawn_safe(a["board"], queue[1:] if a["hold"] and not held else queue)]
     if use_points:
         priced = []
         for a in initial:
             enriched, _, points = enrich(a, score_state)
-            priced.append(dict(enriched, score=a["score"] + points - input_cost * (len(a["path"]) + a["hold"])))
+            priced.append(Placement(enriched, score=a["score"] + points - input_cost * (len(a["path"]) + a["hold"])))
         initial = priced
     if initial:
         best = max(initial, key=lambda a: a["score"] - 0.01 * len(a["path"]))
@@ -447,12 +448,12 @@ def plan(
                     seen.add(state)
                     expanded.append((val, a, nh, nq, newtrail, total, following))
                     if depth == 1 and (best is None or val > best["score"]):
-                        best = dict(a, score=val, depth=1)
+                        best = Placement(a, score=val, depth=1)
             if not expanded:
                 break
             expanded.sort(key=lambda e: e[0], reverse=True)
             val, a, nh, nq, trail, total, following = expanded[0]
-            best = dict(
+            best = Placement(
                 trail[0],
                 score=val,
                 depth=depth,
@@ -484,7 +485,7 @@ def plan(
             scorer(pc_path[-1]["board"], 0) + pc_reward - input_cost * sum(len(a["path"]) + a["hold"] for a in pc_path)
         )
         if not use_points or best is None or pc_value >= best["score"]:
-            best = dict(
+            best = Placement(
                 projected[0],
                 score=pc_value,
                 depth=len(pc_path),

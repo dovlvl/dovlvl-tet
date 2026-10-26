@@ -1,5 +1,6 @@
 """Strict local JSON data, not neural learning or a browser automation backend."""
 
+from model import Placement
 import copy, json, time
 from pathlib import Path
 from geometry import orientations, fits, settle, cellset
@@ -114,7 +115,7 @@ def opener_plan(
         if path is None:
             continue
         x, y, r = step["state"]
-        result = dict(
+        result = Placement(
             kind=desired,
             x=x,
             y=y,
