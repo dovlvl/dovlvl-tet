@@ -132,3 +132,16 @@ def synthetic_emit(ctl, action, obs, now):
 
     with patch("controller.time.monotonic", return_value=now):
         ctl.emit(action, obs, now)
+
+
+class Source:
+    game = None
+
+    def grab(self, box):
+        rgb = self.game.image()[: box["height"], : box["width"]]
+        a = np.zeros((rgb.shape[0], rgb.shape[1], 4), np.uint8)
+        a[:, :, :3] = rgb[:, :, ::-1]
+        return a
+
+    def close(self):
+        pass

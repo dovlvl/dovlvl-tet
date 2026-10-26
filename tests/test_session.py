@@ -1,25 +1,10 @@
-import sys, time, copy, unittest
-from pathlib import Path
+import time, copy, unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-import numpy as np
-from helpers import Game, FakeBackend, C
+import bootstrap  # noqa: F401 -- configure source imports
+from helpers import Game, FakeBackend, C, Source
 from controller import AutoController
 from input_win import KeyPulse
 from runtime import Session
-
-
-class Source:
-    game = None
-
-    def grab(self, box):
-        rgb = self.game.image()[: box["height"], : box["width"]]
-        a = np.zeros((rgb.shape[0], rgb.shape[1], 4), np.uint8)
-        a[:, :, :3] = rgb[:, :, ::-1]
-        return a
-
-    def close(self):
-        pass
 
 
 class PipelineTests(unittest.TestCase):

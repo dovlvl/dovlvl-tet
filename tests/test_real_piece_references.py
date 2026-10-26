@@ -1,10 +1,10 @@
-import sys, time, copy, unittest
+import time, copy, unittest
 from pathlib import Path
 import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from config import DEFAULT
 from geometry import orientations
 from recognition import sample_board, identify, Recognizer, PreviewCache

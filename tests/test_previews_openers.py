@@ -1,7 +1,7 @@
-import sys, unittest, time, copy
+import unittest, time, copy
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 import numpy as np
 from PIL import Image, ImageDraw
 from recognition import PreviewCache, Recognizer, PALETTE
@@ -196,7 +196,7 @@ class OpenerTests(unittest.TestCase):
 
     def test_opener_runtime_pipeline_seven_simulated_blocks(self):
         from runtime import Session
-        from test_session import Source
+        from helpers import Source
 
         c = copy.deepcopy(C)
         c.update(

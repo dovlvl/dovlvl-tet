@@ -1,8 +1,6 @@
 import unittest, time, copy, threading
-import sys
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from unittest.mock import patch
 from helpers import C, Game, FakeBackend
 from input_win import KeyPulse

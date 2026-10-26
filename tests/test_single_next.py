@@ -1,9 +1,9 @@
-import copy, time, sys, unittest
+import copy, time, unittest
 from pathlib import Path
 import numpy as np
 from PIL import Image
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from config import DEFAULT
 from detection import detect, refine_saved_regions
 from recognition import Recognizer

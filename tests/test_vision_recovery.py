@@ -1,7 +1,6 @@
-import sys, time, copy, unittest
-from pathlib import Path
+import time, copy, unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from helpers import Game, FakeBackend, C, synthetic_tick, synthetic_emit
 from controller import AutoController
 from input_win import KeyPulse

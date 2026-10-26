@@ -1,15 +1,15 @@
-import copy, sys, time, tempfile, unittest
+import copy, time, tempfile, unittest
 from pathlib import Path
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from helpers import C, Game, FakeBackend, scene, synthetic_tick, synthetic_emit
 from recognition import Recognizer
 from timing import MotionTracker
 from controller import AutoController
 from input_win import KeyPulse, VK
 from runtime import Session
-from test_session import Source
+from helpers import Source
 
 
 class TransitionGame(Game):

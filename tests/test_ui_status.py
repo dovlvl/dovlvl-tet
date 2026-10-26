@@ -1,8 +1,7 @@
-import sys, unittest, time
-from pathlib import Path
+import unittest, time
 from types import SimpleNamespace
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from config import DEFAULT
 from model import Reading
 from ui_status import summary

@@ -1,7 +1,7 @@
 import unittest, time, copy, sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from helpers import *
 from recognition import Recognizer
 from input_win import KeyPulse, VK

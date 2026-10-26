@@ -1,7 +1,6 @@
-import sys, unittest
-from pathlib import Path
+import unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from scoring import award, tspin, ScoreState
 from strategy import auto_plan, builtin_book
 from planner import landings

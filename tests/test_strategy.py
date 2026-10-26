@@ -1,7 +1,7 @@
-import copy, sys, unittest
+import copy, unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from strategy import auto_plan, builtin_book, position_score
 from config import DEFAULT, load
 from tempfile import TemporaryDirectory
@@ -58,7 +58,7 @@ class AdaptiveAutoTests(unittest.TestCase):
     def test_auto_runtime_finishes_opener_and_keeps_playing(self):
         import time
         from helpers import C, Game, FakeBackend
-        from test_session import Source
+        from helpers import Source
         from input_win import KeyPulse
         from controller import AutoController
         from runtime import Session

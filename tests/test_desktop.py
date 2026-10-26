@@ -1,7 +1,6 @@
-import sys, time, copy, unittest
-from pathlib import Path
+import time, copy, unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 import numpy as np
 from PIL import Image, ImageDraw
 from detection import detect, panel_occluded

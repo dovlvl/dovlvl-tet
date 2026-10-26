@@ -1,7 +1,6 @@
-import copy, sys, unittest
-from pathlib import Path
+import copy, unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from helpers import C, scene, Game, FakeBackend, synthetic_tick, synthetic_emit
 from recognition import Recognizer
 from timing import MotionTracker, route_feasible, search_budget

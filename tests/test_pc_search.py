@@ -1,7 +1,6 @@
-import sys, time, unittest
-from pathlib import Path
+import time, unittest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from planner import plan, landings
 from geometry import advance, fits, orientations, settle, cellset
 from recognition import Recognizer

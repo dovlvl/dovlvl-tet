@@ -1,10 +1,8 @@
 import copy
-import sys
 import time
 import unittest
-from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+import bootstrap  # noqa: F401 -- configure source imports
 from helpers import C, Game, FakeBackend, synthetic_tick
 from recognition import Recognizer
 from controller import AutoController

@@ -8,7 +8,6 @@ are sorted. No deadline-limited searches or native keyboard input are used.
 import copy
 import json
 import os
-import sys
 import tempfile
 import unittest
 from dataclasses import asdict, is_dataclass
@@ -20,7 +19,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+import bootstrap  # noqa: E402, F401 -- configure source imports
 
 import config  # noqa: E402
 import geometry  # noqa: E402
