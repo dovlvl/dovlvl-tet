@@ -88,7 +88,9 @@
 - [x] C2 — auto_plan/opener_plan 키워드 인자화 — 2026-10-27 / 153→153 통과, 골든 일치
   - auto_plan/opener_plan 및 pool.submit 포함 호출 17곳에 인자 이름 명시. 인자 평가 순서·식·기본값 보존, 키워드 형태로 정규화한 변경 모듈 전체 AST가 기준과 동일. Ruff 포맷·진단 113 유지, 시작 started=true/auto_running=false. 전체 diff 자기 검토: 안전 조건·순서·문구 및 테스트 기대값 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c2/.
   - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 . 제한 시간·기대값 유지.
-- [ ] C3 — PendingAction dataclass, Phase Enum
+- [x] C3 — PendingAction dataclass, Phase Enum — 2026-10-27 / 153→153 통과, 골든 일치
+  - PendingAction dataclass로 대기 정보 필드 선언, Phase StrEnum은 기존 문자열 값·표시·JSON·동등 비교 유지. 누락 필드 기본값과 expected_board의 관측 보드 기본값 보존. pickle 왕복 검사·전체 테스트·골든·Ruff 포맷 통과, 진단 113 유지, 시작 started=true/auto_running=false. 전체 diff 자기 검토: F8·포커스·세대·나이 제한·입력 확인·키 해제 조건 및 순서 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c3/.
+  - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 . 제한 시간·기대값 유지.
 - [ ] C4 — Placement dataclass
 - [ ] C5 — Observation 필드 정리
 - [ ] C6 — 사유 코드 enum

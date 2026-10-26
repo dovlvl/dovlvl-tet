@@ -3,6 +3,7 @@ from queue import Queue, Empty
 from concurrent.futures import ProcessPoolExecutor
 from config import union, validate, regions
 from recognition import Recognizer
+from model import Phase
 from planner import urgent_plan
 from strategy import position_score
 from strategy import auto_plan
@@ -220,7 +221,7 @@ class Session:
                 logging.exception("Controller release failed")
             if errors:
                 self.controller.running = False
-                self.controller.phase = "ERROR"
+                self.controller.phase = Phase.ERROR
                 self.controller.reason = "KEY_RELEASE_ERROR: " + " / ".join(errors)
 
     def stop(self):
@@ -361,7 +362,7 @@ class Session:
                         continue
                 seq += 1
                 pending = self.controller.wait
-                expected = pending.get("expected_board") if pending and pending.get("action") == "drop" else None
+                expected = pending.expected_board if pending and pending.action == "drop" else None
                 o = self.recognizer.process(rgb, box, c, seq, captured, cap_ms, expected_fixed=expected)
                 if popup:
                     o.active = None
@@ -369,9 +370,9 @@ class Session:
                     o.stable = 0
                     o.fixed_confidence = 0
                     o.reason = "RECOGNITION_ERROR: BOARD에 팝업/중성 패널 가림 의심"
-                elif o.active is None and pending and pending.get("action") in ("drop", "hold"):
+                elif o.active is None and pending and pending.action in ("drop", "hold"):
                     o.reason = "TRANSITION_WAIT: 줄 삭제/새 블록 생성 중, 현재 블록 판독 대기"
-                self.motion.update(o, controlled_action=pending.get("action") if pending else None)
+                self.motion.update(o, controlled_action=pending.action if pending else None)
                 prior = self.observations.get()
                 if prior and o.generation != prior.generation:
                     self.controller.pulse.release_all()
@@ -396,7 +397,7 @@ class Session:
                         captured=captured,
                         box=box,
                         config={k: c[k] for k in ("board", "hold", "next_slots", "min_s", "min_v", "confidence")},
-                        controlled_action=pending.get("action") if pending else None,
+                        controlled_action=pending.action if pending else None,
                         image=rgb,
                     )
                 o.vision_ms = (time.perf_counter() - reading_begin) * 1000
@@ -649,7 +650,7 @@ class Session:
                         score_state=getattr(ctl, "score_state", None),
                     )
             if self.future and ctl.running and not ctl.diagnostic and not ctl.wait:
-                ctl.phase = "SEARCH"
+                ctl.phase = Phase.SEARCH
                 ctl.reason = f"배치 탐색 결과 대기 {begin - self.future_started:.2f}초 (제한 3초)"
             self.beat("control", begin)
             self.stop_event.wait(max(0.001, 0.005 - (time.monotonic() - begin)))

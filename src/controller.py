@@ -5,6 +5,7 @@ from geometry import advance, settle, orientations, cellset, hard_drop, kick_off
 from planner import route_to, landings, BudgetExpired
 from timing import route_feasible, timing_profile, is_stale
 from scoring import ScoreState, award, tspin
+from model import Phase, PendingAction
 
 
 class AutoController:
@@ -12,7 +13,7 @@ class AutoController:
         self.pulse = pulse
         self.c = config
         self.running = False
-        self.phase = "STOPPED"
+        self.phase = Phase.STOPPED
         self.reason = "중지됨"
         self.last_seq = -1
         self.hold_used = False
@@ -34,7 +35,7 @@ class AutoController:
         self.started_at = None
         self.vision_paused = False
         self.vision_epoch = 0
-        self.vision_phase = "WAIT_VALID"
+        self.vision_phase = Phase.WAIT_VALID
         self.current_generation = None
         self.last_motion_cps = 0
         self.ack_bound_ms = 0
@@ -69,7 +70,7 @@ class AutoController:
         self.block_failures = 0
         self.diagnostic = False
         self.running = True
-        self.phase = "WAIT_VALID"
+        self.phase = Phase.WAIT_VALID
         self.reason = "유효 상태 대기"
         self.hold_used = False
         self.failures = 0
@@ -82,7 +83,7 @@ class AutoController:
         if self.running or self.reason != reason:
             logging.info("Controller stop: %s", reason)
         self.running = False
-        self.phase = "STOPPED"
+        self.phase = Phase.STOPPED
         self.reason = reason
         self.plan = None
         self.wait = None
@@ -91,7 +92,7 @@ class AutoController:
     def replan(self, reason, count_failure=True):
         self.plan = None
         self.wait = None
-        self.phase = "WAIT_VALID"
+        self.phase = Phase.WAIT_VALID
         self.reason = reason
         self.last_ack = reason
         if count_failure:
@@ -131,7 +132,7 @@ class AutoController:
                 },
             )
         self.opener_variant = self.plan.get("opener_variant", self.opener_variant)
-        self.phase = "DECIDE"
+        self.phase = Phase.DECIDE
         self.reason = "배치 결정 완료"
 
     def tick(self, obs, now):
@@ -149,13 +150,13 @@ class AutoController:
                     self.pulse.release_all()
                     self.route_tail = None
                     expected = self.wait and (
-                        (self.wait["action"] == "drop" and obs.transition == "lock")
-                        or (self.wait["action"] == "hold" and obs.board_key == self.wait["before"].board_key)
+                        (self.wait.action == "drop" and obs.transition == "lock")
+                        or (self.wait.action == "hold" and obs.board_key == self.wait.before.board_key)
                     )
                     if not expected:
                         self.plan = None
                         self.wait = None
-                        self.phase = "WAIT_VALID"
+                        self.phase = Phase.WAIT_VALID
                         self.reason = "GENERATION_CHANGED: old plan and pending keys cancelled"
                         if obs.transition == "lock":
                             self.hold_used = False
@@ -190,8 +191,8 @@ class AutoController:
                     self.vision_phase = self.phase
                     self.vision_paused = True
                     self.vision_epoch = self.vision_epoch + 1
-                if self.wait and now - self.wait["sent"] > self.c["transition_ms"] / 1000:
-                    action = self.wait["action"]
+                if self.wait and now - self.wait.sent > self.c["transition_ms"] / 1000:
+                    action = self.wait.action
                     if action == "hold":
                         self.hold_used = True
                     self.wait = None
@@ -202,7 +203,7 @@ class AutoController:
                 if not self.wait:
                     self.plan = None
                 self.route_tail = None
-                self.phase = "VISION_WAIT"
+                self.phase = Phase.VISION_WAIT
                 self.uncertain_since = self.uncertain_since or now
                 self.reason = "인식 복구 대기: 키 입력 중지, 화면이 안정되면 자동 재탐색"
                 self.pulse.release_all()
@@ -210,14 +211,14 @@ class AutoController:
             if recoverable and self.vision_paused:
                 # Brief clear/spawn animations still need their pending drop or
                 # HOLD acknowledgement; otherwise confirmed locks are lost.
-                if self.wait and now - self.wait["sent"] <= self.c["transition_ms"] / 1000:
+                if self.wait and now - self.wait.sent <= self.c["transition_ms"] / 1000:
                     self.vision_paused = False
                     self.uncertain_since = None
                     self.phase = self.vision_phase
                     self.last_seq = obs.seq
                     self.verify(obs, now)
                     return
-                if self.wait and self.wait["action"] == "hold":
+                if self.wait and self.wait.action == "hold":
                     self.hold_used = True
                 self.vision_paused = False
                 self.uncertain_since = None
@@ -226,11 +227,11 @@ class AutoController:
                 return
             if (
                 self.wait
-                and now - self.wait["sent"] > self.c["transition_ms"] / 1000
+                and now - self.wait.sent > self.c["transition_ms"] / 1000
                 and self.phase in ("WAIT_DROP", "WAIT_HOLD")
             ):
                 reason = "INPUT_CONFIRMATION_ERROR: 드롭/홀드 후 새 상태를 확인하지 못했습니다."
-                if self.diagnostic and self.wait["action"] == "hold" and not self.hold_clear(self.wait["before"]):
+                if self.diagnostic and self.wait.action == "hold" and not self.hold_clear(self.wait.before):
                     reason = "RECOGNITION_ERROR: 홀드 키는 보냈으나 프리뷰 불확실 및 현재 블록의 명확한 교체 변화가 없어 성공 판정 불가"
                 self.stop(reason)
                 return
@@ -245,7 +246,7 @@ class AutoController:
                 tracking_limit = (
                     max(0.2, min(self.c["uncertain_ms"] / 1000, 6 / speed)) if speed else self.c["uncertain_ms"] / 1000
                 )
-                if self.wait and self.wait["action"] in ("drop", "hold"):
+                if self.wait and self.wait.action in ("drop", "hold"):
                     # Expected clear/entry/hold animation is a transition with
                     # all keys released, not permission to send another input.
                     tracking_limit = max(tracking_limit, self.c["transition_ms"] / 1000)
@@ -277,7 +278,7 @@ class AutoController:
                 self.verify(obs, now)
                 return
             if self.plan is None:
-                self.phase = "WAIT_VALID"
+                self.phase = Phase.WAIT_VALID
                 return
             if self.plan.get("_generation", obs.generation) != obs.generation:
                 self.replan("STALE_GENERATION: placement discarded", count_failure=False)
@@ -412,35 +413,35 @@ class AutoController:
                 gravity_cps=obs.gravity_cps,
                 fall_ms=obs.fall_ms,
             )
-        wait = {"action": action, "sent": sent_clock, "seq": obs.seq, "before": obs, "hits": 0, "seen": False}
+        wait = PendingAction(action=action, sent=sent_clock, seq=obs.seq, before=obs)
         if action == "drop":
             x, y, r = obs.active.state
             p = orientations(obs.active.kind)[r]
             y = hard_drop(obs.fixed, p, x, y)
-            wait["expected_board"] = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
-            self.phase = "WAIT_DROP"
-            wait["score_spin"] = tspin(
+            wait.expected_board = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
+            self.phase = Phase.WAIT_DROP
+            wait.score_spin = tspin(
                 obs.fixed,
                 obs.active.kind,
                 (x, y, r),
                 *self.last_rotation_meta,
                 drop_distance=y - obs.active.state[1],
             )
-            wait["hard_distance"] = y - obs.active.state[1]
+            wait.hard_distance = y - obs.active.state[1]
         elif action == "hold":
-            self.phase = "WAIT_HOLD"
+            self.phase = Phase.WAIT_HOLD
         else:
-            wait["expected"] = advance(obs.fixed, obs.active.kind, obs.active.state, action)
-            self.phase = "WAIT_ACK"
+            wait.expected = advance(obs.fixed, obs.active.kind, obs.active.state, action)
+            self.phase = Phase.WAIT_ACK
         self.wait = wait
         self.reason = action + " 입력 → 화면 확인 중"
 
     def verify(self, obs, now):
         w = self.wait
-        if obs.seq <= w["seq"] or obs.captured <= w["sent"]:
+        if obs.seq <= w.seq or obs.captured <= w.sent:
             return
-        before = w["before"]
-        action = w["action"]
+        before = w.before
+        action = w.action
         ok = False
         if action == "hold":
             expected = before.hold.kind or (before.queue[0] if before.queue else None)
@@ -470,7 +471,7 @@ class AutoController:
         elif action == "drop":
             board_changed = obs.board_key != before.board_key
             queue_changed = obs.queue != before.queue
-            ok = obs.board_key == w["expected_board"] and (board_changed or queue_changed)
+            ok = obs.board_key == w.expected_board and (board_changed or queue_changed)
             # A stable, visibly advanced queue plus a legal alternative landing
             # can recover a missed movement. Prediction never overwrites pixels.
             advanced = board_changed
@@ -479,10 +480,10 @@ class AutoController:
             advanced = advanced and (not prefix or "?" in prefix or obs.queue[: len(prefix)] == prefix)
             if not ok and advanced:
                 key = obs.board_key
-                w["mismatch_hits"] = w.get("mismatch_hits", 0) + 1 if key == w.get("mismatch_board") else 1
-                w["mismatch_board"] = key
-                if w["mismatch_hits"] >= 3 and not w.get("resync_checked"):
-                    w["resync_checked"] = True
+                w.mismatch_hits = w.mismatch_hits + 1 if key == w.mismatch_board else 1
+                w.mismatch_board = key
+                if w.mismatch_hits >= 3 and not w.resync_checked:
+                    w.resync_checked = True
                     try:
                         legal = landings(
                             before.fixed,
@@ -495,8 +496,8 @@ class AutoController:
                     except BudgetExpired:
                         legal = []
                     if any(tuple(map(tuple, a["board"])) == key for a in legal):
-                        w["expected_board"] = key
-                        w["resynchronized"] = True
+                        w.expected_board = key
+                        w.resynchronized = True
                         ok = True
                         if self.telemetry:
                             self.telemetry.record(
@@ -508,22 +509,22 @@ class AutoController:
             if expected_queue and all(k != "?" for k in expected_queue):
                 ok = ok and obs.queue[: len(expected_queue)] == expected_queue
         else:
-            expected = w["expected"]
+            expected = w.expected
             if expected is not None and obs.active.kind == before.active.kind and obs.board_key == before.board_key:
                 x, y, r = expected
                 ok = obs.generation == before.generation and any(
                     cellset(obs.active.kind, (x, y + dy, r)) == obs.active.cells for dy in range(20)
                 )
         if ok:
-            latency = (now - w["sent"]) * 1000
+            latency = (now - w.sent) * 1000
             self.ack_bound_ms = max(latency, self.ack_bound_ms * 0.95)
-            w["hits"] += 1
-            if action in ("hold", "drop") and w["hits"] < 2:
+            w.hits += 1
+            if action in ("hold", "drop") and w.hits < 2:
                 return
             self.pulse.acknowledged(now, self.c["gap_ms"])
             if action in ("up", "z"):
                 old = before.active.state
-                expected = w["expected"]
+                expected = w.expected
                 offsets = kick_offsets(before.active.kind, old[2], expected[2])
                 kick = next((i for i, (dx, dy) in enumerate(offsets) if (old[0] + dx, old[1] - dy) == expected[:2]), 0)
                 self.last_rotation_meta = (True, kick)
@@ -532,15 +533,15 @@ class AutoController:
             if action == "down":
                 self.soft_distance = self.soft_distance + max(0, obs.active.state[1] - before.active.state[1])
             if self.telemetry:
-                self.telemetry.add("input_ack_ms", (now - w["sent"]) * 1000)
-                self.telemetry.add(action + "_ack_ms", (now - w["sent"]) * 1000)
+                self.telemetry.add("input_ack_ms", (now - w.sent) * 1000)
+                self.telemetry.add(action + "_ack_ms", (now - w.sent) * 1000)
                 self.telemetry.record(
                     "ack",
                     action=action,
                     seq=obs.seq,
-                    latency_ms=(now - w["sent"]) * 1000,
+                    latency_ms=(now - w.sent) * 1000,
                     prediction_match=obs.prediction_match,
-                    board_match=obs.board_key == w.get("expected_board", obs.board_key),
+                    board_match=obs.board_key == (w.expected_board if w.expected_board is not None else obs.board_key),
                 )
             self.wait = None
             self.failures = 0
@@ -560,19 +561,19 @@ class AutoController:
                     self.plan["_board_key"] = obs.board_key
                     self.plan["_generation"] = obs.generation
                     self.route_tail = None
-                    self.phase = "DECIDE"
+                    self.phase = Phase.DECIDE
                     if self.telemetry:
                         self.telemetry.record("hold_plan_retained", seq=obs.seq)
                 else:
                     self.plan = None
-                    self.phase = "WAIT_VALID"
+                    self.phase = Phase.WAIT_VALID
             elif action == "drop":
                 lines = max(0, min(4, (sum(map(sum, before.fixed)) + 4 - sum(map(sum, obs.fixed))) // 10))
                 event = award(
                     lines,
-                    "none" if w.get("resynchronized") else w.get("score_spin", "none"),
+                    "none" if w.resynchronized else w.score_spin,
                     not any(map(any, obs.fixed)),
-                    w.get("hard_distance", 0),
+                    w.hard_distance,
                     self.soft_distance,
                     self.score_state,
                 )
@@ -583,7 +584,7 @@ class AutoController:
                     self.telemetry.record("confirmed_lock_projection", actual_site_points=None, lines=lines, **event)
                 self.last_rotation_meta = (False, 0)
                 self.soft_distance = 0
-                if w.get("resynchronized"):
+                if w.resynchronized:
                     self.last_ack = "Observed legal alternative landing; prediction mismatch, replanning"
                 self.blocks += 1
                 if self.telemetry:
@@ -595,17 +596,17 @@ class AutoController:
                 self.block_failures = 0
                 self.hold_used = False
                 self.plan = None
-                self.phase = "WAIT_VALID"
+                self.phase = Phase.WAIT_VALID
                 if self.c.get("auto_mode", "continuous") == "one":
                     self.stop("한 블록 완료: 고정 및 새 블록 화면 확인")
             else:
-                self.phase = "DECIDE"
+                self.phase = Phase.DECIDE
         else:
-            if self.telemetry and action == "drop" and obs.prediction_match is False and not w.get("mismatch_logged"):
-                self.telemetry.record("landing_mismatch", expected=w["expected_board"], observed=obs.fixed, seq=obs.seq)
-                w["mismatch_logged"] = True
-            w["hits"] = 0
-            if action not in ("hold", "drop") and now - w["sent"] > self.c["ack_ms"] / 1000:
+            if self.telemetry and action == "drop" and obs.prediction_match is False and not w.mismatch_logged:
+                self.telemetry.record("landing_mismatch", expected=w.expected_board, observed=obs.fixed, seq=obs.seq)
+                w.mismatch_logged = True
+            w.hits = 0
+            if action not in ("hold", "drop") and now - w.sent > self.c["ack_ms"] / 1000:
                 self.pulse.release_all()
                 if self.diagnostic:
                     self.stop("INPUT_CONFIRMATION_ERROR: 진단 키의 실제 이동/회전을 확인하지 못했습니다.")
@@ -638,7 +639,7 @@ class AutoController:
             self.pulse.press(self.c["keys"][action], now, self.c["press_ms"], self.c["gap_ms"])
             self.last_input = action
             self.last_ack = "API 전송 완료 / 실제 화면 변화 확인 불가"
-            self.phase = "DIAGNOSTIC"
+            self.phase = Phase.DIAGNOSTIC
             return
         self.start(target, now)
         self.diagnostic = True

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Optional
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -71,3 +72,36 @@ class Observation:
     @property
     def valid(self):
         return self.active is not None and self.confidence >= 0.8 and self.stable >= 2
+
+
+class Phase(StrEnum):
+    DECIDE = "DECIDE"
+    DIAGNOSTIC = "DIAGNOSTIC"
+    ERROR = "ERROR"
+    IDLE = "IDLE"
+    SEARCH = "SEARCH"
+    STOPPED = "STOPPED"
+    VISION_WAIT = "VISION_WAIT"
+    WAIT_ACK = "WAIT_ACK"
+    WAIT_DROP = "WAIT_DROP"
+    WAIT_HOLD = "WAIT_HOLD"
+    WAIT_VALID = "WAIT_VALID"
+
+
+@dataclass
+class PendingAction:
+    action: str
+    sent: float
+    seq: int
+    before: Observation
+    hits: int = 0
+    seen: bool = False
+    expected_board: Optional[tuple] = None
+    expected: Optional[tuple] = None
+    score_spin: str = "none"
+    hard_distance: int = 0
+    mismatch_hits: int = 0
+    mismatch_board: Optional[tuple] = None
+    resync_checked: bool = False
+    resynchronized: bool = False
+    mismatch_logged: bool = False

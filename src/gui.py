@@ -1,6 +1,7 @@
 import sys, time, copy, json, logging
 from pathlib import Path
 from paths import app_root
+from model import Phase
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 from tkinter import ttk, filedialog
@@ -200,14 +201,14 @@ class App:
             logging.exception("Stop/key release failed")
             if self.ctl:
                 self.ctl.running = False
-                self.ctl.phase = "ERROR"
+                self.ctl.phase = Phase.ERROR
                 self.ctl.reason = "KEY_RELEASE_ERROR: " + str(e)
 
     def start_session(self):
         self.end_session()
         validate(self.c, True)
         self.ctl.c = self.c
-        self.ctl.phase = "IDLE"
+        self.ctl.phase = Phase.IDLE
         self.ctl.reason = "대기: 게임 시작 후 F6 또는 입력 진단"
         self.session = Session(self.c, self.ctl, self.ws)
         self.session.start()
