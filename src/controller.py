@@ -90,6 +90,14 @@ class AutoController:
     def stop(self, reason="사용자 중지"):
         if self.running or self.reason != reason:
             logging.info("Controller stop: %s", reason)
+            if self.telemetry:
+                self.telemetry.record(
+                    "controller_stop",
+                    reason=reason,
+                    previous_reason=self.reason,
+                    failures=self.failures,
+                    block_failures=self.block_failures,
+                )
         self.running = False
         self.urgent_requested = False
         self.phase = Phase.STOPPED
@@ -151,6 +159,16 @@ class AutoController:
         self.pulse.release_all()
         if not self.running:
             return
+        if self.telemetry:
+            self.telemetry.record(
+                "execution_window_failed",
+                reason=reason,
+                seq=obs.seq,
+                generation=obs.generation,
+                state=obs.active.state if obs.active else None,
+                failures=self.failures,
+                block_failures=self.block_failures,
+            )
         if self.diagnostic or self.c.get("opener_enabled", False):
             self.stop(reason)
             return

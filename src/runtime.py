@@ -522,6 +522,7 @@ class Session:
         adaptive_budget, profile = search_budget(
             o, self.c, (begin - o.captured) * 1000, getattr(ctl, "ack_bound_ms", None)
         )
+        profile["hold_step_ms"] = max(profile["step_ms"], getattr(ctl, "hold_ack_bound_ms", 0))
         # A configured budget is an upper bound, not a mandatory wait.
         # Repeated 160ms searches were frequently stale before input.
         adaptive_budget = min(adaptive_budget, self.c.get("realtime_search_cap_ms", 60))

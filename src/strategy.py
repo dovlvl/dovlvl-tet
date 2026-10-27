@@ -165,6 +165,7 @@ def auto_plan(
         scorer=pc_position_score if prioritize_pc else position_score,
         budget_ms=budget_ms,
         max_depth=max_depth,
+        beam_width=4 if prioritize_pc else 6,
         counterclockwise=counterclockwise,
         input_ms=input_ms,
         timing=timing,

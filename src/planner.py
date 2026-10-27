@@ -219,6 +219,21 @@ def basic_candidates(
     return list(results.values())
 
 
+def execution_reserve(board, next_kind, timing):
+    """Utility penalty for consuming the next piece's input window, not a gate."""
+    if not timing or not timing.get("gravity_cps"):
+        return 0
+    from timing import drop_distance
+
+    kinds = (next_kind,) if next_kind in tuple("IJLOSTZ") else tuple("IJLOSTZ")
+    distance = min(drop_distance(board, k, (3, 0, 0)) for k in kinds)
+    available = distance / timing["gravity_cps"] * 1000
+    # Budget three observed action/ack cycles before relying on a setup.
+    # Unknown NEXT uses the worst spawn distance, never a guessed bag order.
+    required = 3 * timing.get("step_ms", 70) + timing.get("age_ms", 0)
+    return -0.06 * max(0, required - available)
+
+
 def urgent_plan(
     board, kind, start, rotation=True, counterclockwise=False, scorer=evaluate, budget_ms=4, timing=None, next_kind=None
 ):
@@ -236,7 +251,11 @@ def urgent_plan(
     )
     spawn_kinds = (next_kind,) if next_kind and next_kind in "IJLOSTZ" else tuple("IJLOSTZ")
     candidates = [a for a in candidates if all(fits(a["board"], orientations(k)[0], 3, 0) for k in spawn_kinds)]
-    best = max(candidates, key=lambda a: a["score"] - 0.01 * len(a["path"]), default=None)
+    best = max(
+        candidates,
+        key=lambda a: a["score"] + execution_reserve(a["board"], next_kind, timing) - 0.01 * len(a["path"]),
+        default=None,
+    )
     if best:
         best.update(strategy="Time-bounded survival", expected_points=None)
     return dict(
@@ -311,6 +330,31 @@ def plan(
 
     raw_scorer = scorer
 
+    def reserve(b, q):
+        return execution_reserve(b, q[0] if q else None, timing) if prioritize_pc else 0
+
+    def root_feasible(a):
+        return root_route(a["kind"], tuple(a["path"]), tuple(map(tuple, a["cells"])), a["hold"])
+
+    @lru_cache(maxsize=1024)
+    def root_route(piece, path, cells, hold):
+        if not timing:
+            return True
+        from timing import route_feasible, drop_distance
+
+        if not hold:
+            return route_feasible(board, kind, start, path, cells, timing)[0]
+        available = (
+            drop_distance(board, kind, start) / timing["gravity_cps"] * 1000
+            if timing.get("gravity_cps")
+            else float("inf")
+        )
+        hold_step = max(timing.get("step_ms", 70), timing.get("hold_step_ms", 0))
+        if available <= timing.get("age_ms", 0) + hold_step:
+            return False
+        held_timing = dict(timing, age_ms=hold_step, grounded_unusable=False)
+        return route_feasible(board, piece, (3, 0, 0), path, cells, held_timing)[0]
+
     @lru_cache(maxsize=16384)
     def cached_score(b, lines):
         return raw_scorer(b, lines)
@@ -323,9 +367,9 @@ def plan(
         key = (tuple(map(tuple, b)), k, s, quick)
         if key not in cache:
             check(deadline)
-            # Complete root reachability; bounded lookahead uses fast legal
-            # rotation/translation routes. T spin slots retain full BFS.
-            if quick or (use_points and b != board and k != "T"):
+            # PC Auto must reach the observed NEXT before full BFS consumes
+            # the real-time budget. Legacy score-mode reachability is retained.
+            if prioritize_pc or quick or (use_points and b != board and k != "T"):
                 cache[key] = basic_candidates(
                     b,
                     k,
@@ -334,7 +378,7 @@ def plan(
                     counterclockwise,
                     scorer,
                     min(deadline, pc_deadline) if quick else deadline,
-                    shortest_first=quick,
+                    shortest_first=quick or prioritize_pc,
                 )
             else:
                 cache[key] = landings(b, k, s, rotation, scorer, deadline, counterclockwise)
@@ -354,9 +398,10 @@ def plan(
                 if not spawn_safe(a["board"], nq):
                     continue
                 if timing and b == board and k == kind and s == start:
-                    from timing import route_feasible
-
-                    if hold:
+                    if prioritize_pc:
+                        if not root_feasible(Placement(a, hold=hold)):
+                            continue
+                    elif hold:
                         from timing import drop_distance
 
                         available = (
@@ -366,8 +411,11 @@ def plan(
                         )
                         if available <= timing.get("age_ms", 0) + timing.get("step_ms", 70):
                             continue
-                    elif not route_feasible(b, piece, spawn, a["path"], a["cells"], timing)[0]:
-                        continue
+                    else:
+                        from timing import route_feasible
+
+                        if not route_feasible(b, piece, spawn, a["path"], a["cells"], timing)[0]:
+                            continue
                 if hold:
                     held_candidates += 1
                 yield Placement(a, hold=hold), nh, nq
@@ -416,11 +464,19 @@ def plan(
         )
         initial.extend(Placement(a, hold=True) for a in held_initial)
     initial = [a for a in initial if spawn_safe(a["board"], queue[1:] if a["hold"] and not held else queue)]
+    if prioritize_pc:
+        initial = [a for a in initial if root_feasible(a)]
     if use_points:
         priced = []
         for a in initial:
             enriched, _, points = enrich(a, score_state)
-            priced.append(Placement(enriched, score=a["score"] + points - input_cost * (len(a["path"]) + a["hold"])))
+            nq = queue[1:] if a["hold"] and not held else queue
+            priced.append(
+                Placement(
+                    enriched,
+                    score=a["score"] + points + reserve(a["board"], nq) - input_cost * (len(a["path"]) + a["hold"]),
+                )
+            )
         initial = priced
     if initial:
         best = max(initial, key=lambda a: a["score"] - 0.01 * len(a["path"]))
@@ -487,6 +543,7 @@ def plan(
                         val = (
                             scorer(a["board"], 0)
                             + total
+                            + reserve(a["board"], nq)
                             - input_cost * sum(len(p["path"]) + p["hold"] for p in newtrail)
                         )
                         state = (tuple(map(tuple, a["board"])), nh, tuple(nq), following)
