@@ -151,7 +151,15 @@ def route_to(board, kind, start, target, rotation=True, counterclockwise=False, 
 
 
 def basic_candidates(
-    board, kind, start, rotation=True, counterclockwise=False, scorer=evaluate, deadline=None, timing=None
+    board,
+    kind,
+    start,
+    rotation=True,
+    counterclockwise=False,
+    scorer=evaluate,
+    deadline=None,
+    timing=None,
+    shortest_first=False,
 ):
     """Small complete-input proposals before deeper BFS/PC work; no soft drops."""
     from timing import route_feasible
@@ -164,44 +172,50 @@ def basic_candidates(
         turns += [("up",) * n for n in range(1, 4)]
     if rotation and counterclockwise and kind != "O":
         turns += [("z",) * n for n in range(1, 4)]
-    for turn in turns:
-        for offset in (0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7, -8, 8, -9, 9):
-            if deadline is not None and perf_counter() >= deadline:
-                return list(results.values())
-            path = turn + (("left",) * -offset if offset < 0 else ("right",) * offset)
-            state = start
-            for action in path:
-                state = advance(board, kind, state, action)
-                if state is None:
-                    break
+    proposals = [
+        (turn, offset)
+        for turn in turns
+        for offset in (0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5, -6, 6, -7, 7, -8, 8, -9, 9)
+    ]
+    if shortest_first:
+        proposals.sort(key=lambda item: len(item[0]) + abs(item[1]))
+    for turn, offset in proposals:
+        if deadline is not None and perf_counter() >= deadline:
+            return list(results.values())
+        path = turn + (("left",) * -offset if offset < 0 else ("right",) * offset)
+        state = start
+        for action in path:
+            state = advance(board, kind, state, action)
             if state is None:
-                continue
-            x, y, r = state
-            p = orientations(kind)[r]
-            y = hard_drop(board, p, x, y)
-            cells = cellset(kind, (x, y, r))
-            path += ("drop",)
-            if cells in results:
-                continue
-            if timing and not route_feasible(board, kind, start, path, cells, timing)[0]:
-                continue
-            b, lines = settle(board, p, x, y)
-            results[cells] = Placement(
-                kind=kind,
-                x=x,
-                y=y,
-                r=r,
-                cells=sorted(cells),
-                board=b,
-                lines=lines,
-                path=path,
-                score=scorer(b, lines),
-                hold=False,
-                depth=1,
-                spin="none",
-                hard_distance=y - state[1],
-                soft_distance=0,
-            )
+                break
+        if state is None:
+            continue
+        x, y, r = state
+        p = orientations(kind)[r]
+        y = hard_drop(board, p, x, y)
+        cells = cellset(kind, (x, y, r))
+        path += ("drop",)
+        if cells in results:
+            continue
+        if timing and not route_feasible(board, kind, start, path, cells, timing)[0]:
+            continue
+        b, lines = settle(board, p, x, y)
+        results[cells] = Placement(
+            kind=kind,
+            x=x,
+            y=y,
+            r=r,
+            cells=sorted(cells),
+            board=b,
+            lines=lines,
+            path=path,
+            score=scorer(b, lines),
+            hold=False,
+            depth=1,
+            spin="none",
+            hard_distance=y - state[1],
+            soft_distance=0,
+        )
     return list(results.values())
 
 
@@ -210,7 +224,15 @@ def urgent_plan(
 ):
     begin = perf_counter()
     candidates = basic_candidates(
-        board, kind, start, rotation, counterclockwise, scorer, begin + budget_ms / 1000, timing
+        board,
+        kind,
+        start,
+        rotation,
+        counterclockwise,
+        scorer,
+        begin + budget_ms / 1000,
+        timing,
+        shortest_first=True,
     )
     spawn_kinds = (next_kind,) if next_kind and next_kind in "IJLOSTZ" else tuple("IJLOSTZ")
     candidates = [a for a in candidates if all(fits(a["board"], orientations(k)[0], 3, 0) for k in spawn_kinds)]
@@ -247,6 +269,7 @@ def plan(
     timing=None,
     score_state=None,
     use_points=False,
+    prioritize_pc=False,
 ):
     begin = perf_counter()
     deadline = begin + budget_ms / 1000
@@ -262,7 +285,7 @@ def plan(
     held_candidates = 0
     max_seen = 0
     score_state = score_state or ScoreState()
-    input_cost = 0.01 * input_ms if use_points else 0.0004 * input_ms
+    input_cost = 0.01 * input_ms if use_points and not prioritize_pc else 0.0004 * input_ms
 
     def enrich(a, state):
         if not use_points:
@@ -277,7 +300,8 @@ def plan(
         )
         following = event.pop("score_state")
         event["scoring_after"] = asdict(following)
-        return Placement(a, **event), following, event["expected_points"] / max(1, state.level) / 25
+        reward = 0 if prioritize_pc else event["expected_points"] / max(1, state.level) / 25
+        return Placement(a, **event), following, reward
 
     def spawn_safe(b, q):
         if not any(b[0]) and not any(b[1]):
@@ -294,22 +318,31 @@ def plan(
     def scorer(b, lines):
         return cached_score(tuple(map(tuple, b)), lines)
 
-    def options(b, k, s):
+    def options(b, k, s, quick=False):
         nonlocal nodes, rotated
-        key = (tuple(map(tuple, b)), k, s)
+        key = (tuple(map(tuple, b)), k, s, quick)
         if key not in cache:
             check(deadline)
             # Complete root reachability; bounded lookahead uses fast legal
             # rotation/translation routes. T spin slots retain full BFS.
-            if use_points and b != board and k != "T":
-                cache[key] = basic_candidates(b, k, s, rotation, counterclockwise, scorer, deadline)
+            if quick or (use_points and b != board and k != "T"):
+                cache[key] = basic_candidates(
+                    b,
+                    k,
+                    s,
+                    rotation,
+                    counterclockwise,
+                    scorer,
+                    min(deadline, pc_deadline) if quick else deadline,
+                    shortest_first=quick,
+                )
             else:
                 cache[key] = landings(b, k, s, rotation, scorer, deadline, counterclockwise)
             nodes += len(cache[key])
             rotated += sum("up" in a["path"] or "z" in a["path"] for a in cache[key])
         return cache[key]
 
-    def branches(b, k, h, q, can, s):
+    def branches(b, k, h, q, can, s, quick=False):
         nonlocal held_candidates
         choices = [(k, h, q, False, s)]
         # Same-kind filled swaps cannot improve a state and cannot be visually
@@ -317,7 +350,7 @@ def plan(
         if use_hold and can and (h or q) and (h != k or s[1] >= 6):
             choices.append((h or q[0], k, q if h else q[1:], True, (3, 0, 0)))
         for piece, nh, nq, hold, spawn in choices:
-            for a in options(b, piece, spawn):
+            for a in options(b, piece, spawn, quick):
                 if not spawn_safe(a["board"], nq):
                     continue
                 if timing and b == board and k == kind and s == start:
@@ -368,6 +401,7 @@ def plan(
         scorer,
         min(deadline, begin + min(10, budget_ms * 0.15) / 1000),
         timing,
+        shortest_first=prioritize_pc,
     )
     if use_hold and allow_hold and (held or queue) and (held != kind or start[1] >= 6):
         replacement = held or queue[0]
@@ -410,7 +444,9 @@ def plan(
         key = (tuple(map(tuple, b)), k, h, tuple(q), can, s, left)
         if key in failed:
             return None
-        for a, nh, nq in sorted(branches(b, k, h, q, can, s), key=lambda e: e[0]["score"], reverse=True):
+        for a, nh, nq in sorted(
+            branches(b, k, h, q, can, s, quick=prioritize_pc), key=lambda e: e[0]["score"], reverse=True
+        ):
             check(pc_deadline)
             trail = path + [a]
             if a["lines"] and not any(map(any, a["board"])):
@@ -499,7 +535,7 @@ def plan(
         pc_value = (
             scorer(pc_path[-1]["board"], 0) + pc_reward - input_cost * sum(len(a["path"]) + a["hold"] for a in pc_path)
         )
-        if not use_points or best is None or pc_value >= best["score"]:
+        if prioritize_pc or not use_points or best is None or pc_value >= best["score"]:
             best = Placement(
                 projected[0],
                 score=pc_value,
@@ -537,6 +573,7 @@ def plan(
         if pc_path
         else [],
         pc_horizon=horizon,
+        pc_route_scope="rotation_translation" if prioritize_pc else "srs_reachability",
         pc_targets=targets,
         pc_future="unknown_beyond_observed_queue",
         pc_deferred_for_survival=pc_deferred,

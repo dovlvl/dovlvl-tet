@@ -5,7 +5,7 @@ from config import union, validate, regions
 from recognition import Recognizer
 from model import Phase
 from planner import urgent_plan
-from strategy import position_score
+from strategy import pc_position_score
 from strategy import auto_plan
 from openers import load_book, opener_plan
 from detection import panel_occluded, fit_grid, refine_saved_regions, refine_next_region
@@ -541,7 +541,7 @@ class Session:
                 o.active.state,
                 self.c.get("rotation_confirmed", False),
                 bool(self.c["keys"].get("z")),
-                position_score,
+                pc_position_score,
                 min(6, adaptive_budget),
                 profile,
                 next_kind=nexts[0] if nexts else None,
@@ -600,6 +600,7 @@ class Session:
                 input_ms=self.c["press_ms"] + self.c["gap_ms"],
                 timing=profile,
                 score_state=getattr(ctl, "score_state", None),
+                goal="perfect_clear",
             )
         return False
 

@@ -36,6 +36,22 @@ def position_score(board, lines):
     return score
 
 
+def pc_position_score(board, lines):
+    """Prefer removing cells and keeping every column low; no reserved well."""
+    heights, holes, buried = metrics(board)
+    height = max(heights)
+    return (
+        6 * lines
+        - sum(map(sum, board))
+        - 0.7 * sum(heights)
+        - 14 * holes
+        - buried
+        - 2 * height
+        - 1.5 * max(0, height - 4) ** 2
+        - 0.4 * sum(abs(a - b) for a, b in zip(heights, heights[1:]))
+    )
+
+
 @lru_cache(maxsize=1)
 def builtin_book():
     from openers import load_book, compile_book, mirrored_variant
@@ -64,9 +80,11 @@ def auto_plan(
     input_ms=70,
     timing=None,
     score_state=None,
+    goal="score",
 ):
     """Use only observed previews; never force an opener through a mismatch."""
-    if opening and previews and basic_verified and rotation:
+    prioritize_pc = goal == "perfect_clear"
+    if not prioritize_pc and opening and previews and basic_verified and rotation:
         from openers import opener_plan, board_key
 
         book = builtin_book()
@@ -144,7 +162,7 @@ def auto_plan(
         use_hold,
         allow_hold,
         rotation,
-        scorer=position_score,
+        scorer=pc_position_score if prioritize_pc else position_score,
         budget_ms=budget_ms,
         max_depth=max_depth,
         counterclockwise=counterclockwise,
@@ -152,10 +170,13 @@ def auto_plan(
         timing=timing,
         score_state=score_state,
         use_points=True,
+        prioritize_pc=prioritize_pc,
     )
     if packet["result"]:
         heights, holes, buried = metrics(board)
         packet["result"]["strategy"] = "다운스택" if max(heights) >= 12 or holes >= 3 else "점수 / 평탄 쌓기"
+        if prioritize_pc:
+            packet["result"]["strategy"] = "PC 준비 / 낮게 줄 지우기"
         if packet["result"].get("spin") in ("full", "mini"):
             packet["result"]["strategy"] = "T-Spin / " + packet["result"]["spin"]
         if packet["result"]["lines"] == 4:
@@ -165,6 +186,7 @@ def auto_plan(
         elif packet.get("pc_status") == "found_confirmed_queue" and not packet.get("pc_deferred_for_survival"):
             packet["result"]["strategy"] = "PC path / " + str(packet["pc_remaining"]) + " placements"
         packet["result"]["evaluation"] = {
+            "goal": goal,
             "heights": heights,
             "holes": holes,
             "buried": buried,
