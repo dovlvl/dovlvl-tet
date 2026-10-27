@@ -231,7 +231,11 @@ def execution_reserve(board, next_kind, timing):
     # Budget three observed action/ack cycles before relying on a setup.
     # Unknown NEXT uses the worst spawn distance, never a guessed bag order.
     required = 3 * timing.get("step_ms", 70) + timing.get("age_ms", 0)
-    return -0.06 * max(0, required - available)
+    deficit = max(0, required - available)
+    cycles = deficit / max(70, timing.get("step_ms", 70))
+    # A nearly exhausted spawn corridor must outweigh a locally tidy tower.
+    # This remains a utility term; route_feasible is the unchanged input gate.
+    return -0.06 * deficit - 60 * cycles**2
 
 
 def urgent_plan(

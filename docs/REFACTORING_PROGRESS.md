@@ -185,3 +185,13 @@
   - 기준 179개→185개 전체 통과(간헐 실패 없음), 기존 골든 8개 일치, Ruff 포맷 통과·진단 113 유지. 추가 6개 테스트: 전체 1,160개 전이 경로 재생·다음 완성 경로, 원문 2가방 시작 보드, 4변형 완성, 미확인 큐·HOLD 반복·보드 불일치 중지, 저장/재검증 및 파생 자료 위조 거부, 두 빌드 각 14개 모의 제어(NEXT 1개).
   - 소스 시작 검사 started=true/auto_running=false. 안전장치 파일 controller/input/timing/runtime/config/recognition 변경 없음. 기존 테스트·기대값·골든·lock·fixtures·기존 TKI 데이터 불변. 실제 게임 키 전송 및 입력 진단 실행 안 함. 실게임 성공률 미검증. 근거 `diagnostics/article_openers/`, 사용 안내 `docs/OPENERS_KO.md`.
   - `dist/TetrisAuto.exe` 재생성, EXE started=true/frozen=true/tcl_bundled=true/auto_running=false. 세 JSON의 EXE 포함 내용이 소스와 바이트 단위 일치. 바이너리는 배포 정책에 따라 로컬에만 보관. 전체 diff 자기 검토 완료.
+
+- [x] LATE-MOVEMENT — 후반 조작 여유 평가와 이동 대기 감소 — 2026-10-27
+  - 사용자 요청: 후반 확인 후 "이동이 너무 느려 빠르게도 부탁해", "다시 작업해줘". 후반 문제와 이동 속도 개선을 승인한 별도 작업. 기존 F 항목 및 완료한 정리와 분리.
+  - 실제 `dist/diagnostics/sessions/20261027_143409`는 46,110점·레벨 8·71줄에서 종료. 중앙 탑 상승 이후 안전 경로 없음 5회로 중지했고, 이후 창 닫힘은 최초 원인이 아님. 기록된 190개 배치는 실제 입력 기록과 구분 없이 모의 성능으로 재해석하지 않음.
+  - 이동·회전 ACK 프레임에서 남은 경로·프레임 나이·세대·보드·포커스·observation_guard를 다시 검사. 키 간격 만료나 탐색 완료 시에도 미확인 입력이 없고 기존 관측이 신선한 경우에만 재검사해 불필요한 다음 캡처 대기를 줄임. 키 누름/간격 35ms 기본값, HOLD·드롭 두 번 확인, 실패 한도·F8·키 해제·중력 경로·watchdog 조건 유지.
+  - Latest에 관측 변경 알림을 추가해 제어 루프가 새 관측 도착 즉시 깨어나도록 변경. 기존 5ms 타임아웃은 유지. 다음 블록의 조작 여유 부족에 입력 확인 주기 단위의 제곱 불이익을 추가하며 안전 판정은 그대로 유지.
+  - 기준 185개→191개 전체 통과, 간헐 실패 없음. 골든 8개 일치, Ruff 포맷 통과·진단 113 유지, 소스 started=true/auto_running=false. 추가 6개 회귀 검사: ACK 프레임 연속 진행, 키 간격 후 신선한 관측 재사용, 탐색 결과 대기 감소, 오래된/불확실/불일치 보드·포커스·F8·backend guard 중지, 관측 알림, 실제 후반 보드 배치 및 경로 시간 검사.
+  - 실제 세대 247 보드의 오프라인 재생에서 중앙 13칸 대신 오른쪽 12칸 경로를 선택. 지연 화면 모형(50ms 캡처·40ms 처리 지연·누름/간격 각각 35ms·NEXT 한 개·중력 없음)의 동일 20개 배치/75회 입력: 9.450→7.655초, 2.116→2.613 PPS. 실제 게임 속도·생존 향상은 미검증. 실제 게임 입력이나 입력 진단은 실행하지 않음.
+  - 자기 검토: 안전 게이트와 사용자 표시 문구 불변. 기존 테스트·기대값·골든·data·fixtures·의존성·AGENTS.md 불변. 근거 `diagnostics/late_movement/`, 설명 `docs/AUTO_STRATEGY_KO.md`.
+  - 이전 EXE를 진단 폴더에 보관한 뒤 `dist/TetrisAuto.exe` 갱신. EXE started=true/frozen=true/tcl_bundled=true/auto_running=false, 포함된 전체 소스 대조 all_match=true. 바이너리는 로컬 배포물로만 보관.

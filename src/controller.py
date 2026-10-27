@@ -307,7 +307,11 @@ class AutoController:
                 return
             self.uncertain_since = None
             if obs.seq == self.last_seq:
-                return
+                # A confirmed observed state can remain fresh when the key gap
+                # expires or a search result arrives. No unacknowledged action
+                # may consume it again; age, route and backend guards still run.
+                if self.wait or self.plan is None or now < self.pulse.next_at:
+                    return
             self.last_seq = obs.seq
             if self.telemetry:
                 self.telemetry.record(
@@ -321,8 +325,13 @@ class AutoController:
                     phase=self.phase,
                 )
             if self.wait:
+                action = self.wait.action
                 self.verify(obs, now)
-                return
+                if self.wait or self.plan is None or not self.running or action in ("hold", "drop"):
+                    return
+                # This fresh frame already confirms the previous movement.
+                # Recheck the remaining route and all input guards below rather
+                # than idling until another identical board frame arrives.
             if self.plan is None:
                 self.phase = Phase.WAIT_VALID
                 return

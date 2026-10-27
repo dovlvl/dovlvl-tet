@@ -24,16 +24,21 @@ def warm_search_worker(compile_openers=False):
 
 class Latest:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = threading.Condition()
         self.value = None
 
     def put(self, v):
         with self.lock:
             self.value = v
+            self.lock.notify_all()
 
     def get(self):
         with self.lock:
             return self.value
+
+    def wait_for_change(self, previous, timeout):
+        with self.lock:
+            self.lock.wait_for(lambda: self.value is not previous, timeout)
 
 
 class Session:
@@ -686,4 +691,4 @@ class Session:
                 ctl.phase = Phase.SEARCH
                 ctl.reason = f"배치 탐색 결과 대기 {begin - self.future_started:.2f}초 (제한 3초)"
             self.beat("control", begin)
-            self.stop_event.wait(max(0.001, 0.005 - (time.monotonic() - begin)))
+            self.observations.wait_for_change(o, max(0.001, 0.005 - (time.monotonic() - begin)))
