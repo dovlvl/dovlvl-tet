@@ -29,18 +29,15 @@ def profile_fit(profile, count, ref_pad):
         cell = (n - 2 * pad) / count
         if cell < 7:
             continue
-        contrasts = []
-        for i in range(1, count):
-            p = round(pad + i * cell)
-            c = round(pad + (i - 0.5) * cell)
-            band = max(1, round(cell * 0.07))
-            contrasts.append(
-                float(
-                    profile[max(0, p - band) : min(n, p + band + 1)].max()
-                    - np.median(profile[max(0, c - band) : min(n, c + band + 1)])
-                )
-            )
-        a = np.asarray(contrasts)
+        # Every band is interior: cell >= 7 and the half-cell margin is
+        # larger than band. Batch the same max/median samples instead of
+        # hundreds of small Python/NumPy calls on the confirmation path.
+        i = np.arange(1, count)
+        p = np.rint(pad + i * cell).astype(int)
+        c = np.rint(pad + (i - 0.5) * cell).astype(int)
+        band = max(1, round(cell * 0.07))
+        offsets = np.arange(-band, band + 1)
+        a = (profile[p[:, None] + offsets].max(axis=1) - np.median(profile[c[:, None] + offsets], axis=1)).astype(float)
         fraction = float((a > 2).mean())
         score = fraction + 0.3 * min(1, float(np.maximum(a, 0).mean()) / 25) - abs(pad - ref_pad) * 0.001
         if best is None or score > best[0]:

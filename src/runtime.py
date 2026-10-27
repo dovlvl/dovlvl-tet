@@ -374,13 +374,16 @@ class Session:
                 # Large neutral panels are not tetrominoes. Do not infer through a popup.
                 reading_begin = time.perf_counter()
                 popup = panel_occluded(board_image)
+                self.telemetry.add("popup_check_ms", (time.perf_counter() - reading_begin) * 1000)
                 if self.windows and begin - grid_check > 0.5:
                     grid_check = begin
+                    probe_begin = time.perf_counter()
                     bad_grid = (
                         bad_grid + 1
                         if fit_grid(board_image, [0, 0, board_image.shape[1], board_image.shape[0]]) is None
                         else 0
                     )
+                    self.telemetry.add("layout_probe_ms", (time.perf_counter() - probe_begin) * 1000)
                     recent = self.observations.get()
                     tracked = bool(recent and recent.valid and begin - recent.captured < 0.3)
                     if bad_grid >= 6 and not popup and not tracked:
@@ -390,10 +393,18 @@ class Session:
                         self.need_detection = True
                         self.observations.put(None)
                         continue
+                if time.monotonic() - captured > c.get("frame_age_ms", 200) / 1000:
+                    self.telemetry.add("discarded_after_layout", 1)
+                    continue
                 seq += 1
                 pending = self.controller.wait
                 expected = pending.expected_board if pending and pending.action == "drop" else None
+                piece_begin = time.perf_counter()
                 o = self.recognizer.process(rgb, box, c, seq, captured, cap_ms, expected_fixed=expected)
+                self.telemetry.add("piece_recognition_ms", (time.perf_counter() - piece_begin) * 1000)
+                if time.monotonic() - captured > c.get("frame_age_ms", 200) / 1000:
+                    self.telemetry.add("discarded_after_recognition", 1)
+                    continue
                 if popup:
                     o.active = None
                     o.confidence = 0

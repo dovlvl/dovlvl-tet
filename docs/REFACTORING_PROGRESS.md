@@ -195,3 +195,12 @@
   - 실제 세대 247 보드의 오프라인 재생에서 중앙 13칸 대신 오른쪽 12칸 경로를 선택. 지연 화면 모형(50ms 캡처·40ms 처리 지연·누름/간격 각각 35ms·NEXT 한 개·중력 없음)의 동일 20개 배치/75회 입력: 9.450→7.655초, 2.116→2.613 PPS. 실제 게임 속도·생존 향상은 미검증. 실제 게임 입력이나 입력 진단은 실행하지 않음.
   - 자기 검토: 안전 게이트와 사용자 표시 문구 불변. 기존 테스트·기대값·골든·data·fixtures·의존성·AGENTS.md 불변. 근거 `diagnostics/late_movement/`, 설명 `docs/AUTO_STRATEGY_KO.md`.
   - 이전 EXE를 진단 폴더에 보관한 뒤 `dist/TetrisAuto.exe` 갱신. EXE started=true/frozen=true/tcl_bundled=true/auto_running=false, 포함된 전체 소스 대조 all_match=true. 바이너리는 로컬 배포물로만 보관.
+
+- [x] TRANSITION-LATENCY — 드롭·HOLD 확인 경로의 검사 비용 및 오래된 결과 처리 보완 — 2026-10-27
+  - 사용자 요청: 새 실제 기록 검토 후 "수정". 실제 `20261027_153334`는 드롭 6회·HOLD 1회의 확인 시간 초과 및 오래된 인식 결과가 기록됨. 실제 시간 초과 전체의 원인이 이 변경만으로 해결됐다는 주장은 하지 않음.
+  - `detection.profile_fit`의 동일 격자 최대값·중앙값 표본을 배열로 묶어 반복 호출을 줄임. 표본·반올림·점수·임계값·검사 주기 불변. 기존 스칼라 기준과 float32/64·크기·잡음/평탄/주기 형태 96개 조합의 결과가 정확히 일치.
+  - `runtime.vision_loop`에서 격자 검사 뒤와 인식 뒤에도 기존 frame_age_ms를 재검사해 만료된 결과를 게시하지 않고 최신 캡처로 진행. 각 단계 소요 시간과 만료 폐기 수 기록. 키 입력 확인 조건, HOLD·드롭 2회 확인, 전환 시간 제한, 실패 한도, F8·포커스·키 해제·watchdog 불변.
+  - 기준 191개→195개 전체 통과, 간헐 실패 없음. 골든 8개 일치, Ruff 포맷 통과·진단 113 유지. 추가 4개: 격자 수치 정확 일치, 격자 처리 후 만료 폐기, 인식 처리 후 만료 폐기, 신선한 프레임의 기존 파이프라인 전달. 기존 전환·HOLD·드롭·오프너 모의 제어 검사도 통과.
+  - 실제 저장 화면 7장을 교차 순서로 70번 검사해 출력 정확 일치. 격자 검사 중앙값 15.443→4.911ms, p95 22.054→7.136ms. 저장 화면 재생 측정이며 실게임 속도·시간 초과 해소·생존 향상은 미검증. 실제 게임 키 전송 및 입력 진단 실행 안 함.
+  - 소스 시작 started=true/auto_running=false. 전체 diff 자기 검토 완료. 기존 테스트·기대값·골든·data·fixtures·의존성·AGENTS.md 불변. 근거 `diagnostics/transition_recognition/`, 설명 `docs/AUTO_STRATEGY_KO.md`.
+  - 이전 EXE 보관 후 `dist/TetrisAuto.exe` 갱신. EXE started=true/frozen=true/tcl_bundled=true/auto_running=false, 전체 포함 소스 대조 all_match=true. 실행 파일은 배포 정책에 따라 로컬에만 보관.
