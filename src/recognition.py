@@ -318,6 +318,108 @@ class Recognizer:
     def reset(self):
         self.__init__()
 
+    def _active_candidates(self, grid, occupied, expected_fixed):
+        candidates = []
+        # Confirm a drop's predicted board against pixels; this is a hypothesis, never trusted blindly.
+        if expected_fixed is not None:
+            expected = {(x, y) for y, row in enumerate(expected_fixed) for x, v in enumerate(row) if v}
+            if expected <= occupied:
+                candidates = identify(occupied - expected, grid)
+        # Persistent fixed board separates touching same-color active blocks.
+        if not candidates and self.last_fixed is not None:
+            base = {(x, y) for y, row in enumerate(self.last_fixed) for x, v in enumerate(row) if v}
+            if base <= occupied:
+                candidates = identify(occupied - base, grid)
+        if not candidates and self.prev_grid is not None:
+            old = self.prev_grid
+            removed = {(int(x), int(y)) for y, x in np.argwhere((old > 0) & (old != grid))}
+            added = {(int(x), int(y)) for y, x in np.argwhere((grid > 0) & (old != grid))}
+            if 0 < len(removed) <= 4 and 0 < len(added) <= 4:
+                for color in set(int(grid[y, x]) for x, y in added):
+                    kind = KINDS[color]
+                    for r, p in enumerate(orientations(kind)):
+                        for ax, ay in added:
+                            for px, py in p:
+                                st = (ax - px, ay - py, r)
+                                cells = cellset(kind, st)
+                                if (
+                                    added <= cells
+                                    and all(0 <= x < 10 and 0 <= y < 20 and grid[y, x] == color for x, y in cells)
+                                    and identify((cells - added) | removed, old)
+                                ):
+                                    candidates.append((kind, st))
+        unique = {cellset(k, s): (k, s) for k, s in candidates}
+        if len(unique) != 1:
+            options = []
+            if self.last_fixed is not None and self.last_active is not None:
+                # A new piece may already be far below spawn. Validate the
+                # residual fixed board as a legal lock instead of using y<=2.
+                for base in lock_successors(self.last_fixed, self.last_active.kind, self.last_active.state).values():
+                    if base <= occupied:
+                        options += identify(occupied - base, grid)
+            if not options:
+                options = [(k, s) for k, s in components(grid) if (s[1] <= 2 and 2 <= s[0] <= 5) or len(occupied) == 4]
+                if self.last_fixed is not None and self.last_active is not None:
+                    legal = lock_successors(self.last_fixed, self.last_active.kind, self.last_active.state)
+                    options = [
+                        (k, s)
+                        for k, s in components(grid)
+                        if tuple(tuple(int((x, y) in occupied - cellset(k, s)) for x in range(10)) for y in range(20))
+                        in legal
+                    ]
+            unique = {cellset(k, s): (k, s) for k, s in options}
+        return unique
+
+    def _filled_ghost(self, board_rgb, grid, kind, st, cells, fixed, ghost, config, confidence, reason):
+        hh, ww = board_rgb.shape[:2]
+        brightness = np.max(
+            board_rgb[
+                ((np.arange(20) + 0.5) * hh / 20).astype(int)[:, None],
+                ((np.arange(10) + 0.5) * ww / 10).astype(int)[None, :],
+            ],
+            axis=-1,
+        )
+        active_light = min(float(brightness[y, x]) for x, y in cells)
+        rest = grid.copy()
+        for x, y in cells:
+            rest[y, x] = 0
+        for gk, gs in components(rest):
+            gc = cellset(gk, gs)
+            if gk != kind or min(y for x, y in gc) <= max(y for x, y in cells):
+                continue
+            if max(float(brightness[y, x]) for x, y in gc) > active_light * 0.55:
+                continue
+            trial = [row[:] for row in fixed]
+            for x, y in gc:
+                trial[y][x] = 0
+            xx, yy, rr = st
+            yy = hard_drop(trial, orientations(kind)[rr], xx, yy)
+            if cellset(kind, (xx, yy, rr)) != gc:
+                continue
+            if config.get("filled_ghost_verified", False):
+                fixed = trial
+                ghost += sorted(gc)
+            else:
+                confidence = 0
+                reason = "AMBIGUOUS_FILLED_GHOST: calibrate skin before Auto"
+        return fixed, ghost, confidence, reason
+
+    def _update_generation(self, fixed, kind, st, active, confidence, config, now):
+        if confidence >= config.get("confidence", 0.8):
+            changed = self.last_fixed is not None and fixed != self.last_fixed
+            swapped = self.last_active is not None and kind != self.last_active.kind
+            respawned = bool(
+                self.last_active and not changed and not swapped and st[1] <= 2 and self.last_active.state[1] >= 6
+            )
+            self.generation = self.generation + int(changed or swapped or respawned)
+            if changed or swapped or respawned:
+                self.transition = "lock" if changed else "piece_change"
+            self.last_fixed = fixed
+            self.last_active = active
+            self.fixed_time = now
+        else:
+            self.stable = 0
+
     def process(self, rgb, bbox, config, seq, captured, capture_ms=0, expected_fixed=None):
         begin = time.perf_counter()
         now = time.monotonic()
@@ -383,55 +485,7 @@ class Recognizer:
             return o
         grid, conf, ghost, invalid = sample_board(roi(config["board"]), config["min_s"], config["min_v"])
         occupied = {(int(x), int(y)) for y, x in np.argwhere(grid > 0)}
-        candidates = []
-        # Confirm a drop's predicted board against pixels; this is a hypothesis, never trusted blindly.
-        if expected_fixed is not None:
-            expected = {(x, y) for y, row in enumerate(expected_fixed) for x, v in enumerate(row) if v}
-            if expected <= occupied:
-                candidates = identify(occupied - expected, grid)
-        # Persistent fixed board separates touching same-color active blocks.
-        if not candidates and self.last_fixed is not None:
-            base = {(x, y) for y, row in enumerate(self.last_fixed) for x, v in enumerate(row) if v}
-            if base <= occupied:
-                candidates = identify(occupied - base, grid)
-        if not candidates and self.prev_grid is not None:
-            old = self.prev_grid
-            removed = {(int(x), int(y)) for y, x in np.argwhere((old > 0) & (old != grid))}
-            added = {(int(x), int(y)) for y, x in np.argwhere((grid > 0) & (old != grid))}
-            if 0 < len(removed) <= 4 and 0 < len(added) <= 4:
-                for color in set(int(grid[y, x]) for x, y in added):
-                    kind = KINDS[color]
-                    for r, p in enumerate(orientations(kind)):
-                        for ax, ay in added:
-                            for px, py in p:
-                                st = (ax - px, ay - py, r)
-                                cells = cellset(kind, st)
-                                if (
-                                    added <= cells
-                                    and all(0 <= x < 10 and 0 <= y < 20 and grid[y, x] == color for x, y in cells)
-                                    and identify((cells - added) | removed, old)
-                                ):
-                                    candidates.append((kind, st))
-        unique = {cellset(k, s): (k, s) for k, s in candidates}
-        if len(unique) != 1:
-            options = []
-            if self.last_fixed is not None and self.last_active is not None:
-                # A new piece may already be far below spawn. Validate the
-                # residual fixed board as a legal lock instead of using y<=2.
-                for base in lock_successors(self.last_fixed, self.last_active.kind, self.last_active.state).values():
-                    if base <= occupied:
-                        options += identify(occupied - base, grid)
-            if not options:
-                options = [(k, s) for k, s in components(grid) if (s[1] <= 2 and 2 <= s[0] <= 5) or len(occupied) == 4]
-                if self.last_fixed is not None and self.last_active is not None:
-                    legal = lock_successors(self.last_fixed, self.last_active.kind, self.last_active.state)
-                    options = [
-                        (k, s)
-                        for k, s in components(grid)
-                        if tuple(tuple(int((x, y) in occupied - cellset(k, s)) for x in range(10)) for y in range(20))
-                        in legal
-                    ]
-            unique = {cellset(k, s): (k, s) for k, s in options}
+        unique = self._active_candidates(grid, occupied, expected_fixed)
         active = None
         fixed = self.last_fixed or [[0] * 10 for _ in range(20)]
         confidence = 0
@@ -461,37 +515,9 @@ class Recognizer:
             # Dim filled ghosts require both shape and exact drop geometry. If the
             # skin is uncalibrated, reject rather than turn a shadow into a stack.
             board_rgb = roi(config["board"])
-            hh, ww = board_rgb.shape[:2]
-            brightness = np.max(
-                board_rgb[
-                    ((np.arange(20) + 0.5) * hh / 20).astype(int)[:, None],
-                    ((np.arange(10) + 0.5) * ww / 10).astype(int)[None, :],
-                ],
-                axis=-1,
+            fixed, ghost, confidence, reason = self._filled_ghost(
+                board_rgb, grid, kind, st, cells, fixed, ghost, config, confidence, reason
             )
-            active_light = min(float(brightness[y, x]) for x, y in cells)
-            rest = grid.copy()
-            for x, y in cells:
-                rest[y, x] = 0
-            for gk, gs in components(rest):
-                gc = cellset(gk, gs)
-                if gk != kind or min(y for x, y in gc) <= max(y for x, y in cells):
-                    continue
-                if max(float(brightness[y, x]) for x, y in gc) > active_light * 0.55:
-                    continue
-                trial = [row[:] for row in fixed]
-                for x, y in gc:
-                    trial[y][x] = 0
-                xx, yy, rr = st
-                yy = hard_drop(trial, orientations(kind)[rr], xx, yy)
-                if cellset(kind, (xx, yy, rr)) != gc:
-                    continue
-                if config.get("filled_ghost_verified", False):
-                    fixed = trial
-                    ghost += sorted(gc)
-                else:
-                    confidence = 0
-                    reason = "AMBIGUOUS_FILLED_GHOST: calibrate skin before Auto"
             # During movement/rotation the fixed board cannot change. A lock or
             # hold has a spawn near the top; those transitions need stable frames.
             if self.last_fixed is not None and fixed != self.last_fixed and self.last_active:
@@ -509,20 +535,7 @@ class Recognizer:
                 or kind != self.last_active.kind
             ):
                 self.cache.invalidate()
-            if confidence >= config.get("confidence", 0.8):
-                changed = self.last_fixed is not None and fixed != self.last_fixed
-                swapped = self.last_active is not None and kind != self.last_active.kind
-                respawned = bool(
-                    self.last_active and not changed and not swapped and st[1] <= 2 and self.last_active.state[1] >= 6
-                )
-                self.generation = self.generation + int(changed or swapped or respawned)
-                if changed or swapped or respawned:
-                    self.transition = "lock" if changed else "piece_change"
-                self.last_fixed = fixed
-                self.last_active = active
-                self.fixed_time = now
-            else:
-                self.stable = 0
+            self._update_generation(fixed, kind, st, active, confidence, config, now)
         else:
             self.stable = 0
         if not occupied and not invalid:
