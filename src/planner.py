@@ -422,55 +422,70 @@ def plan(
         failed.add(key)
         return None
 
-    try:
-        for depth in targets:
-            pc_path = pc(board, kind, held, queue, allow_hold, start, depth, [])
-            if pc_path:
-                break
-        pc_exhausted = pc_path is None
-    except BudgetExpired:
-        timed_out = True
-    frontier = [(board, kind, held, queue, allow_hold, start, [], 0, score_state)]
-    try:
-        for depth in range(1, horizon + 1):
-            expanded = []
-            seen = set()
-            for b, k, h, q, can, s, trail, reward, scoring in frontier:
-                for a, nh, nq in branches(b, k, h, q, can, s):
-                    check(deadline)
-                    a, following, points = enrich(a, scoring)
-                    newtrail = trail + [a]
-                    total = reward + scorer(a["board"], a["lines"]) - scorer(a["board"], 0) + points
-                    val = scorer(a["board"], 0) + total - input_cost * sum(len(p["path"]) + p["hold"] for p in newtrail)
-                    state = (tuple(map(tuple, a["board"])), nh, tuple(nq), following)
-                    if state in seen:
-                        continue
-                    seen.add(state)
-                    expanded.append((val, a, nh, nq, newtrail, total, following))
-                    if depth == 1 and (best is None or val > best["score"]):
-                        best = Placement(a, score=val, depth=1)
-            if not expanded:
-                break
-            expanded.sort(key=lambda e: e[0], reverse=True)
-            val, a, nh, nq, trail, total, following = expanded[0]
-            best = Placement(
-                trail[0],
-                score=val,
-                depth=depth,
-                next_hint=None,
-                continuation=[dict(kind=p["kind"], cells=p["cells"], hold=p["hold"], lines=p["lines"]) for p in trail],
-            )
-            completed_depth = depth
-            max_seen = max(max_seen, depth)
-            frontier = [
-                (a["board"], nq[0], nh, nq[1:], True, (3, 0, 0), trail, total, following)
-                for val, a, nh, nq, trail, total, following in expanded[:beam_width]
-                if nq
-            ]
-            if not frontier:
-                break
-    except BudgetExpired:
-        timed_out = True
+    def search_perfect_clear():
+        nonlocal pc_path, pc_exhausted, timed_out
+        try:
+            for depth in targets:
+                pc_path = pc(board, kind, held, queue, allow_hold, start, depth, [])
+                if pc_path:
+                    break
+            pc_exhausted = pc_path is None
+        except BudgetExpired:
+            timed_out = True
+
+    search_perfect_clear()
+
+    def search_beam():
+        nonlocal best, completed_depth, max_seen, timed_out
+        frontier = [(board, kind, held, queue, allow_hold, start, [], 0, score_state)]
+        try:
+            for depth in range(1, horizon + 1):
+                expanded = []
+                seen = set()
+                for b, k, h, q, can, s, trail, reward, scoring in frontier:
+                    for a, nh, nq in branches(b, k, h, q, can, s):
+                        check(deadline)
+                        a, following, points = enrich(a, scoring)
+                        newtrail = trail + [a]
+                        total = reward + scorer(a["board"], a["lines"]) - scorer(a["board"], 0) + points
+                        val = (
+                            scorer(a["board"], 0)
+                            + total
+                            - input_cost * sum(len(p["path"]) + p["hold"] for p in newtrail)
+                        )
+                        state = (tuple(map(tuple, a["board"])), nh, tuple(nq), following)
+                        if state in seen:
+                            continue
+                        seen.add(state)
+                        expanded.append((val, a, nh, nq, newtrail, total, following))
+                        if depth == 1 and (best is None or val > best["score"]):
+                            best = Placement(a, score=val, depth=1)
+                if not expanded:
+                    break
+                expanded.sort(key=lambda e: e[0], reverse=True)
+                val, a, nh, nq, trail, total, following = expanded[0]
+                best = Placement(
+                    trail[0],
+                    score=val,
+                    depth=depth,
+                    next_hint=None,
+                    continuation=[
+                        dict(kind=p["kind"], cells=p["cells"], hold=p["hold"], lines=p["lines"]) for p in trail
+                    ],
+                )
+                completed_depth = depth
+                max_seen = max(max_seen, depth)
+                frontier = [
+                    (a["board"], nq[0], nh, nq[1:], True, (3, 0, 0), trail, total, following)
+                    for val, a, nh, nq, trail, total, following in expanded[:beam_width]
+                    if nq
+                ]
+                if not frontier:
+                    break
+        except BudgetExpired:
+            timed_out = True
+
+    search_beam()
     height = max(board_metrics(board)[0])
     pc_deferred = bool(pc_path and height >= 12 and len(pc_path) > 1)
     if pc_path and not pc_deferred:
