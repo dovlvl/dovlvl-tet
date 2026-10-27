@@ -3,6 +3,18 @@ from typing import Optional
 from enum import StrEnum
 
 
+class ReasonCode(StrEnum):
+    OCCLUDED = "OCCLUDED"
+    OTHER = "OTHER"
+
+
+def reason_code(reason):
+    """Convert legacy reasons without changing their display or serialization."""
+    if "팝업" in reason or "가림" in reason:
+        return ReasonCode.OCCLUDED
+    return ReasonCode.OTHER
+
+
 @dataclass(frozen=True)
 class Reading:
     kind: Optional[str]  # None means empty ONLY when valid is True

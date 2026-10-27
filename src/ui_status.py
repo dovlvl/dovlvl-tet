@@ -1,6 +1,7 @@
 """The main window contains only three short, nontechnical statuses."""
 
 import time
+from model import ReasonCode, reason_code
 
 
 def summary(config, session, observation, searching=False, error=False, now=None):
@@ -14,7 +15,7 @@ def summary(config, session, observation, searching=False, error=False, now=None
         board = "찾는 중"
     elif fresh and observation.valid:
         board = "정상"
-    elif fresh and ("팝업" in observation.reason or "가림" in observation.reason):
+    elif fresh and reason_code(observation.reason) == ReasonCode.OCCLUDED:
         board = "가려짐"
     else:
         board = "불확실"
