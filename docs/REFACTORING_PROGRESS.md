@@ -111,7 +111,9 @@
 - [x] D3 — Recognizer.process 분리 — 2026-10-27 / 153→153 통과, 골든 일치
   - 후보 탐색·채워진 고스트 처리·세대 갱신을 각각 메서드로 추출. 인자·반환값·리스트 변경·캐시 무효화와 신뢰도 검사의 순서 유지. 세 메서드를 호출 자리에 펼친 recognition 전체 AST가 기준과 동일.
   - 전체 테스트·골든·Ruff 포맷 통과, 진단 113 유지, 간헐 실패 없음. 전체 diff 자기 검토: 부등호·기본값·안전 조건·문구 및 기존 테스트·스냅샷 유지. 시작 검사 대상 변경 없음, 실제 입력 실행 안 함. 로그 `diagnostics/refactor_d3/`.
-- [ ] D4 — Session.control_loop 분리
+- [x] D4 — Session.control_loop 분리 — 2026-10-27 / 153→153 통과, 골든 일치
+  - 탐색 요청의 프리뷰·HOLD 준비, 긴급 탐색, 오프너·일반 탐색 제출을 dispatch_search로 이동. 제어 루프의 실행 조건과 결과 수락·신선도·계획 나이·워치독 동작은 유지. 원래 continue 두 곳을 같은 반복 건너뜀 결과로 연결했고, 함수를 펼쳐 continue를 복원한 runtime 전체 AST가 기준과 동일.
+  - 전체 테스트·골든·Ruff 포맷 통과, 진단 113 유지, 시작 started=true/auto_running=false. 전체 diff 자기 검토: OPENER_GATE·검증 플래그·시간 제한·안전 조건·문구 및 기존 테스트·스냅샷 유지. 실제 입력 실행 안 함. 로그 `diagnostics/refactor_d4/`.
 - [ ] D5 — controller.tick/emit 중복 정리
 
 ## 별도 버그 수정 (사람 확인 필요 — Codex는 진행하지 않음)

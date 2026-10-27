@@ -480,6 +480,103 @@ class Session:
             o.queue,
         )
 
+    def dispatch_search(self, o, ctl, begin):
+        previews = self.c.get("preview_verified", False) or o.next_stable >= 3
+        nexts = []
+        if previews and self.c.get("auto_mode") == "continuous":
+            for r in o.nexts:
+                if not r.valid or not r.kind or r.confidence < self.c["confidence"]:
+                    break
+                nexts.append(r.kind)
+        clear = ctl.hold_clear(o) and self.c.get("enable_hold", False) and bool(self.c["keys"]["hold"])
+        held = o.hold.kind if clear else None
+        self.job = self.signature(o, ctl.hold_used)
+        self.job_generation = self.generation
+        self.job_started_at = ctl.started_at
+        self.future_started = begin
+        adaptive_budget, profile = search_budget(
+            o, self.c, (begin - o.captured) * 1000, getattr(ctl, "ack_bound_ms", None)
+        )
+        # A configured budget is an upper bound, not a mandatory wait.
+        # Repeated 160ms searches were frequently stale before input.
+        adaptive_budget = min(adaptive_budget, self.c.get("realtime_search_cap_ms", 60))
+        self.telemetry.record(
+            "search_started",
+            generation=o.generation,
+            captured=o.captured,
+            state=o.active.state,
+            budget_ms=adaptive_budget,
+            timing=profile,
+        )
+        if profile["calibrated"] and (o.fall_ms is not None and o.fall_ms < 600):
+            packet = urgent_plan(
+                o.fixed,
+                o.active.kind,
+                o.active.state,
+                self.c.get("rotation_confirmed", False),
+                bool(self.c["keys"].get("z")),
+                position_score,
+                min(6, adaptive_budget),
+                profile,
+                next_kind=nexts[0] if nexts else None,
+            )
+            packet.update(key=(o.board_key, o.active.kind, ctl.hold_used), generation=o.generation)
+            self.search_ms = packet["search_ms"]
+            self.last_packet = packet
+            self.telemetry.add("search_ms", self.search_ms)
+            if packet["result"] is None:
+                ctl.stop("EXECUTION_WINDOW_EXCEEDED: no observed-state path can finish safely")
+            else:
+                ctl.accept_plan(packet, o)
+            return True
+        if self.opener_book:
+            if (
+                not self.c.get("preview_verified")
+                or not self.c.get("basic_auto_verified")
+                or not o.hold.valid
+                or not all(r.valid and r.kind for r in o.nexts)
+            ):
+                ctl.stop("OPENER_GATE: 기본 Auto/프리뷰 실게임 검증 미완료 또는 HOLD/NEXT 불확실")
+                return True
+            self.future = self.pool.submit(
+                opener_plan,
+                book=self.opener_book,
+                index=ctl.blocks,
+                chosen=ctl.opener_variant,
+                board=o.fixed,
+                kind=o.active.kind,
+                start=o.active.state,
+                held=o.hold.kind,
+                queue=list(o.queue),
+                hold_used=ctl.hold_used,
+                hold_available=o.hold.state != "disabled"
+                and self.c.get("enable_hold", False)
+                and bool(self.c["keys"]["hold"]),
+                rotation=self.c.get("rotation_confirmed", False),
+            )
+        else:
+            self.future = self.pool.submit(
+                auto_plan,
+                board=o.fixed,
+                kind=o.active.kind,
+                start=o.active.state,
+                held=held,
+                nexts=nexts,
+                use_hold=clear,
+                allow_hold=not ctl.hold_used and clear,
+                rotation=self.c.get("rotation_confirmed", True) and self.c.get("rotation_system", "SRS") == "SRS",
+                previews=previews,
+                basic_verified=self.c.get("basic_auto_verified", False),
+                opening=self.c.get("basic_auto_verified", False),
+                budget_ms=adaptive_budget,
+                max_depth=self.c.get("search_depth", 4),
+                counterclockwise=bool(self.c["keys"].get("z")),
+                input_ms=self.c["press_ms"] + self.c["gap_ms"],
+                timing=profile,
+                score_state=getattr(ctl, "score_state", None),
+            )
+        return False
+
     def control_loop(self):
         if self.c.get("opener_enabled"):
             self.opener_book = load_book(self.c["opener_file"])
@@ -554,101 +651,8 @@ class Session:
                 and is_fresh(o, begin, self.c)
                 and self.previews_ready(o)
             ):
-                previews = self.c.get("preview_verified", False) or o.next_stable >= 3
-                nexts = []
-                if previews and self.c.get("auto_mode") == "continuous":
-                    for r in o.nexts:
-                        if not r.valid or not r.kind or r.confidence < self.c["confidence"]:
-                            break
-                        nexts.append(r.kind)
-                clear = ctl.hold_clear(o) and self.c.get("enable_hold", False) and bool(self.c["keys"]["hold"])
-                held = o.hold.kind if clear else None
-                self.job = self.signature(o, ctl.hold_used)
-                self.job_generation = self.generation
-                self.job_started_at = ctl.started_at
-                self.future_started = begin
-                adaptive_budget, profile = search_budget(
-                    o, self.c, (begin - o.captured) * 1000, getattr(ctl, "ack_bound_ms", None)
-                )
-                # A configured budget is an upper bound, not a mandatory wait.
-                # Repeated 160ms searches were frequently stale before input.
-                adaptive_budget = min(adaptive_budget, self.c.get("realtime_search_cap_ms", 60))
-                self.telemetry.record(
-                    "search_started",
-                    generation=o.generation,
-                    captured=o.captured,
-                    state=o.active.state,
-                    budget_ms=adaptive_budget,
-                    timing=profile,
-                )
-                if profile["calibrated"] and (o.fall_ms is not None and o.fall_ms < 600):
-                    packet = urgent_plan(
-                        o.fixed,
-                        o.active.kind,
-                        o.active.state,
-                        self.c.get("rotation_confirmed", False),
-                        bool(self.c["keys"].get("z")),
-                        position_score,
-                        min(6, adaptive_budget),
-                        profile,
-                        next_kind=nexts[0] if nexts else None,
-                    )
-                    packet.update(key=(o.board_key, o.active.kind, ctl.hold_used), generation=o.generation)
-                    self.search_ms = packet["search_ms"]
-                    self.last_packet = packet
-                    self.telemetry.add("search_ms", self.search_ms)
-                    if packet["result"] is None:
-                        ctl.stop("EXECUTION_WINDOW_EXCEEDED: no observed-state path can finish safely")
-                    else:
-                        ctl.accept_plan(packet, o)
+                if self.dispatch_search(o, ctl, begin):
                     continue
-                if self.opener_book:
-                    if (
-                        not self.c.get("preview_verified")
-                        or not self.c.get("basic_auto_verified")
-                        or not o.hold.valid
-                        or not all(r.valid and r.kind for r in o.nexts)
-                    ):
-                        ctl.stop("OPENER_GATE: 기본 Auto/프리뷰 실게임 검증 미완료 또는 HOLD/NEXT 불확실")
-                        continue
-                    self.future = self.pool.submit(
-                        opener_plan,
-                        book=self.opener_book,
-                        index=ctl.blocks,
-                        chosen=ctl.opener_variant,
-                        board=o.fixed,
-                        kind=o.active.kind,
-                        start=o.active.state,
-                        held=o.hold.kind,
-                        queue=list(o.queue),
-                        hold_used=ctl.hold_used,
-                        hold_available=o.hold.state != "disabled"
-                        and self.c.get("enable_hold", False)
-                        and bool(self.c["keys"]["hold"]),
-                        rotation=self.c.get("rotation_confirmed", False),
-                    )
-                else:
-                    self.future = self.pool.submit(
-                        auto_plan,
-                        board=o.fixed,
-                        kind=o.active.kind,
-                        start=o.active.state,
-                        held=held,
-                        nexts=nexts,
-                        use_hold=clear,
-                        allow_hold=not ctl.hold_used and clear,
-                        rotation=self.c.get("rotation_confirmed", True)
-                        and self.c.get("rotation_system", "SRS") == "SRS",
-                        previews=previews,
-                        basic_verified=self.c.get("basic_auto_verified", False),
-                        opening=self.c.get("basic_auto_verified", False),
-                        budget_ms=adaptive_budget,
-                        max_depth=self.c.get("search_depth", 4),
-                        counterclockwise=bool(self.c["keys"].get("z")),
-                        input_ms=self.c["press_ms"] + self.c["gap_ms"],
-                        timing=profile,
-                        score_state=getattr(ctl, "score_state", None),
-                    )
             if self.future and ctl.running and not ctl.diagnostic and not ctl.wait:
                 ctl.phase = Phase.SEARCH
                 ctl.reason = f"배치 탐색 결과 대기 {begin - self.future_started:.2f}초 (제한 3초)"
