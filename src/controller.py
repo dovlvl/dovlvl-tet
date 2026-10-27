@@ -135,6 +135,15 @@ class AutoController:
         self.phase = Phase.DECIDE
         self.reason = "배치 결정 완료"
 
+    def invalid_observation(self, obs, now):
+        return obs is None or is_stale(obs, now, self.c) or (not obs.valid) or (obs.confidence < self.c["confidence"])
+
+    def drop_state(self, obs):
+        x, y, r = obs.active.state
+        p = orientations(obs.active.kind)[r]
+        y = hard_drop(obs.fixed, p, x, y)
+        return x, y, r, p
+
     def tick(self, obs, now):
         if not self.running:
             return
@@ -182,9 +191,7 @@ class AutoController:
             if not self.pulse.focused():
                 self.stop("게임 창 포커스 상실")
                 return
-            invalid = (
-                obs is None or is_stale(obs, now, self.c) or not obs.valid or obs.confidence < self.c["confidence"]
-            )
+            invalid = self.invalid_observation(obs, now)
             recoverable = not self.diagnostic and not self.c.get("opener_enabled", False)
             if recoverable and invalid:
                 if not self.vision_paused:
@@ -235,7 +242,7 @@ class AutoController:
                     reason = "RECOGNITION_ERROR: 홀드 키는 보냈으나 프리뷰 불확실 및 현재 블록의 명확한 교체 변화가 없어 성공 판정 불가"
                 self.stop(reason)
                 return
-            if obs is None or is_stale(obs, now, self.c) or not obs.valid or obs.confidence < self.c["confidence"]:
+            if self.invalid_observation(obs, now):
                 self.uncertain_since = self.uncertain_since or now
                 self.reason = (
                     obs.reason if obs and obs.reason else "RECOGNITION_ERROR: BOARD/현재 블록 불확실 또는 오래된 프레임"
@@ -371,9 +378,7 @@ class AutoController:
             self.reason = "RECOGNITION_ERROR: 입력 직전 프레임 나이 초과"
             return
         if action == "drop" and self.plan and "expected_after" in self.plan:
-            x, y, r = obs.active.state
-            p = orientations(obs.active.kind)[r]
-            y = hard_drop(obs.fixed, p, x, y)
+            x, y, r, p = self.drop_state(obs)
             expected = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
             if expected != tuple(tuple(row) for row in self.plan["expected_after"]):
                 self.stop("OPENER_BOARD_ERROR: 예상 고정 보드 불일치")
@@ -415,9 +420,7 @@ class AutoController:
             )
         wait = PendingAction(action=action, sent=sent_clock, seq=obs.seq, before=obs)
         if action == "drop":
-            x, y, r = obs.active.state
-            p = orientations(obs.active.kind)[r]
-            y = hard_drop(obs.fixed, p, x, y)
+            x, y, r, p = self.drop_state(obs)
             wait.expected_board = tuple(tuple(row) for row in settle(obs.fixed, p, x, y)[0])
             self.phase = Phase.WAIT_DROP
             wait.score_spin = tspin(
