@@ -94,7 +94,9 @@
 - [x] C4 — Placement dataclass — 2026-10-27 / 153→153 통과, 골든 일치
   - Placement dataclass는 기존 dict 호환을 유지해 선택적 키·복사·비교·JSON 형식 보존. 324개 결정적 배치의 키 순서 포함 JSON 및 pickle 왕복이 기준과 정확히 일치. 골든 변환기는 dict 호환 자료형을 기존 매핑 경로로 처리하며 기대값·스냅샷 불변. 프로세스 파이프라인 포함 전체 테스트·Ruff 포맷 통과, 진단 113 유지. 전체 diff 자기 검토: 계산식·안전 조건·순서·문구 유지. 실제 입력 실행 안 함. 로그 diagnostics/refactor_c4/.
   - 시간 의존 간헐 실패 후 최대 2회 단독 재실행 통과: 기준 test_core.RecognitionTests.test_preview_cache_timestamp; 변경 후 test_core.RecognitionTests.test_preview_cache_timestamp. 제한 시간·기대값 유지.
-- [ ] C5 — Observation 필드 정리
+- [-] C5 — Observation 필드 정리 — 2026-10-27 / 골든 스냅샷 보존 규칙과 충돌하여 건너뜀
+  - 작업 전 전체 153개 통과, Ruff 진단 113. `controlled_motion: bool = False`를 dataclass 필드로 선언하면 `asdict(Observation)`에 새 키가 추가되어 인식 골든 비교가 실패(8개 중 1개). 기존 스냅샷·기대값을 바꾸거나 직렬화 방식을 우회하지 않고는 항목과 완전 일치 조건을 함께 만족할 수 없어 코드 변경을 취소함. 안전 조건·호출 순서·화면 문구 변경 없음. 실제 입력 실행 안 함. 로그 `diagnostics/refactor_c5/`.
+  - 원복 후 전체 153개 통과(간헐 실패 없음), 골든 8개 일치, Ruff 포맷 통과·진단 113 유지. 전체 diff 자기 검토: 진행 문서만 변경, 코드·기존 테스트·스냅샷 불변.
 - [ ] C6 — 사유 코드 enum
 
 ## 단계 D — 큰 함수/클래스 분리
