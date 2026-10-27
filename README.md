@@ -65,6 +65,9 @@ T스핀은 마지막 회전과 모서리 조건을 검사합니다. 남은 순�
 
 빌드: `build_windows.bat`
 
+설정의 **기본 제공 개막 빌드 선택**에서 TKI·스틱스핀·SDPC를 불러올 수 있습니다.
+지원 구간과 사용 조건은 [개막 빌드 안내](docs/OPENERS_KO.md)를 참고하세요.
+
 소스 실행·빌드에는 Tcl/Tk가 포함된 Windows Python이 필요합니다. 검증한 버전은 Python 3.12.14 x64입니다.
 `run_windows.bat`은 필요한 경우 고정 의존성을 설치하고 실행합니다. `build_windows.bat`은 테스트·EXE 빌드·시작 검사를 수행합니다.
 

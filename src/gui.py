@@ -1,6 +1,6 @@
 import sys, time, copy, json, logging
 from pathlib import Path
-from paths import app_root
+from paths import app_root, resource_root
 from model import Phase
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
@@ -461,11 +461,36 @@ class App(SettingsWindow, RegionEditor, DiagnosticsWindow, PreviewWindow):
             s.telemetry.add("ui_render_ms", (time.perf_counter() - begin) * 1000)
         self.root.after(round(1000 / self.c["ui_fps"]), self.render)
 
-    def import_opener(self):
+    def choose_builtin_opener(self):
         self.stop()
-        path = filedialog.askopenfilename(
-            title="오프너 JSON (가져오기만 하며 자동 실행하지 않음)", filetypes=[("JSON", "*.json")]
-        )
+        win = tk.Toplevel(self.root)
+        win.title("기본 제공 개막 빌드")
+        books = {
+            "TKI / Fonzie (1가방)": "TKI_Fonzie.json",
+            "스틱스핀 (2가방, 좌우대칭)": "Stickspin.json",
+            "SDPC (2가방, 좌우대칭)": "SDPC.json",
+        }
+        choice = tk.StringVar(value=next(iter(books)))
+        ttk.Combobox(win, textvariable=choice, values=list(books), state="readonly", width=40).pack(padx=15, pady=10)
+        ttk.Label(
+            win,
+            text="모델 검증 완료 / 실게임 미검증\n완성 또는 보드·보이는 큐 불일치 시 중지합니다.\nSDPC의 PC 연계는 포함되지 않습니다. 선택만으로 실행되지 않습니다.",
+            wraplength=390,
+        ).pack(padx=15, pady=5)
+
+        def select():
+            path = resource_root() / "data" / "openers" / books[choice.get()]
+            win.destroy()
+            self.import_opener(path)
+
+        ttk.Button(win, text="선택한 빌드 불러오기", command=select).pack(pady=10)
+
+    def import_opener(self, path=None):
+        self.stop()
+        if path is None:
+            path = filedialog.askopenfilename(
+                title="오프너 JSON (가져오기만 하며 자동 실행하지 않음)", filetypes=[("JSON", "*.json")]
+            )
         if not path:
             return
         from openers import load_book
@@ -474,6 +499,8 @@ class App(SettingsWindow, RegionEditor, DiagnosticsWindow, PreviewWindow):
         self.status.set("빌드 JSON 경로/보드 검증 중: 입력 중지")
 
     def finish_import(self):
+        from openers import book_for_save
+
         future = self.import_future
         self.import_future = None
         try:
@@ -481,7 +508,7 @@ class App(SettingsWindow, RegionEditor, DiagnosticsWindow, PreviewWindow):
             folder = PATH.parent / "openers"
             folder.mkdir(parents=True, exist_ok=True)
             dest = folder / "selected.json"
-            dest.write_text(json.dumps(book, ensure_ascii=False, indent=2), encoding="utf-8")
+            dest.write_text(json.dumps(book_for_save(book), ensure_ascii=False, indent=2), encoding="utf-8")
             self.c["opener_file"] = str(dest)
             self.c["opener_enabled"] = False
             self.c["opener_summary"] = {

@@ -175,3 +175,13 @@
   - 저장된 실패 화면 3장 재생: 기존 NEXT unknown → 첫 블록 J/I/J를 각각 올바르게 인식, 출력 슬롯은 모두 한 개. 새 회귀 테스트는 메뉴 이후 재인식·이동/전환 시간 분리·HOLD 시간 보장·새 프레임 재탐색·안전 경로 복귀·반복 실패 한도·F8/진단/오프너 차단을 검증.
   - 소스 및 새 `dist/TetrisAuto.exe` 시작 검사 started=true/auto_running=false, EXE frozen=true/tcl_bundled=true. 패키지의 전체 포함 소스 비교 all_match=true. 기존 EXE는 로컬 진단 폴더에 보관. 실제 게임에 키를 보내는 검증은 수행하지 않았으며, 실제 후반부 플레이 개선 여부는 아직 재검증하지 않음.
   - 변경: `src/controller.py`, `src/detection.py`, `src/runtime.py`, `tests/test_late_game_recovery.py`, 이 진행 문서. 기존 테스트·기대값·골든·fixtures·data·잠금 의존성·AGENTS.md 불변. 근거는 `diagnostics/late_game_fix/`.
+
+
+- [x] ARTICLE-OPENERS — 요청 글 기반 스틱스핀·SDPC 개막 빌드 추가 — 2026-10-27
+  - 사용자 요청: https://hse30.tistory.com/73 을 읽고 빌드 추가. 동작을 추가하는 별도 승인 작업이며 기존 F 항목과 분리. `data/openers/Stickspin.json`, `SDPC.json` 추가를 포함하는 범위.
+  - 상세 글 `/1031`, `/483`의 기본 1~2가방 배치를 직접 좌표화. 두 빌드 각각 원형·좌우대칭, T스핀 싱글→더블, 14개 배치 후 기존 완료 중지. PC·DPC·트리플 후속 및 모든 가방 순서 지원은 아님.
+  - `stage-targets` 형식의 가방 목표에서 정확한 중간 보드별 SRS 경로와 완성 가능한 전이만 컴파일. 현재 블록 우선, 확인된 HOLD 또는 NEXT 첫 개로 1회 교환만 허용. 보이지 않는 큐 추정 없음. 불일치 시 기존 중지. 저장된 파생 경로는 신뢰하지 않고 다시 검증.
+  - 설정에 기본 제공 빌드 선택 추가. 불러오면 입력 중지·opener_enabled=false 유지. 기존 JSON 가져오기·TKI 지원 및 일반 Auto의 PC 목표 유지.
+  - 기준 179개→185개 전체 통과(간헐 실패 없음), 기존 골든 8개 일치, Ruff 포맷 통과·진단 113 유지. 추가 6개 테스트: 전체 1,160개 전이 경로 재생·다음 완성 경로, 원문 2가방 시작 보드, 4변형 완성, 미확인 큐·HOLD 반복·보드 불일치 중지, 저장/재검증 및 파생 자료 위조 거부, 두 빌드 각 14개 모의 제어(NEXT 1개).
+  - 소스 시작 검사 started=true/auto_running=false. 안전장치 파일 controller/input/timing/runtime/config/recognition 변경 없음. 기존 테스트·기대값·골든·lock·fixtures·기존 TKI 데이터 불변. 실제 게임 키 전송 및 입력 진단 실행 안 함. 실게임 성공률 미검증. 근거 `diagnostics/article_openers/`, 사용 안내 `docs/OPENERS_KO.md`.
+  - `dist/TetrisAuto.exe` 재생성, EXE started=true/frozen=true/tcl_bundled=true/auto_running=false. 세 JSON의 EXE 포함 내용이 소스와 바이트 단위 일치. 바이너리는 배포 정책에 따라 로컬에만 보관. 전체 diff 자기 검토 완료.

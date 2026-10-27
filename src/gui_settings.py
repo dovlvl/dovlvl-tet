@@ -52,6 +52,10 @@ class SettingsWindow:
             row=row, columnspan=2
         )
         row += 1
+        ttk.Button(
+            win, text="기본 제공 개막 빌드 선택", command=lambda: (dialog.destroy(), self.choose_builtin_opener())
+        ).grid(row=row, columnspan=2)
+        row += 1
         ttk.Label(win, text="게임 창").grid(row=row, column=0)
         target = ttk.Combobox(
             win, textvariable=self.target_name, values=self.combo["values"], state="readonly", width=48
