@@ -39,6 +39,10 @@ class AutoController:
         self.current_generation = None
         self.last_motion_cps = 0
         self.ack_bound_ms = 0
+        self.hold_ack_bound_ms = 0
+        self.drop_ack_bound_ms = 0
+        self.urgent_requested = False
+        self.execution_retry_seq = -1
         self.score_state = ScoreState()
         self.projected_points = 0
         self.last_rotation_meta = (False, 0)
@@ -58,6 +62,10 @@ class AutoController:
         self.current_generation = None
         self.last_motion_cps = 0
         self.ack_bound_ms = 0
+        self.hold_ack_bound_ms = 0
+        self.drop_ack_bound_ms = 0
+        self.urgent_requested = False
+        self.execution_retry_seq = -1
         self.blocks = 0
         self.raw_diagnostic = None
         self.opener_variant = None
@@ -83,6 +91,7 @@ class AutoController:
         if self.running or self.reason != reason:
             logging.info("Controller stop: %s", reason)
         self.running = False
+        self.urgent_requested = False
         self.phase = Phase.STOPPED
         self.reason = reason
         self.plan = None
@@ -137,6 +146,18 @@ class AutoController:
 
     def invalid_observation(self, obs, now):
         return obs is None or is_stale(obs, now, self.c) or (not obs.valid) or (obs.confidence < self.c["confidence"])
+
+    def execution_window_failed(self, reason, obs):
+        self.pulse.release_all()
+        if not self.running:
+            return
+        if self.diagnostic or self.c.get("opener_enabled", False):
+            self.stop(reason)
+            return
+        self.route_tail = None
+        self.execution_retry_seq = obs.seq
+        self.urgent_requested = True
+        self.replan(reason)
 
     def drop_state(self, obs):
         x, y, r = obs.active.state
@@ -292,9 +313,9 @@ class AutoController:
                 return
             if self.plan["hold"]:
                 if obs.fall_ms is not None and obs.fall_ms <= (now - obs.captured) * 1000 + max(
-                    self.c["press_ms"] + self.c["gap_ms"], self.ack_bound_ms
+                    self.c["press_ms"] + self.c["gap_ms"], self.ack_bound_ms, self.hold_ack_bound_ms
                 ):
-                    self.stop("EXECUTION_WINDOW_EXCEEDED: insufficient time to confirm HOLD")
+                    self.execution_window_failed("EXECUTION_WINDOW_EXCEEDED: insufficient time to confirm HOLD", obs)
                     return
                 if not self.hold_clear(obs):
                     self.replan("프리뷰 불확실: 홀드 없이 재탐색")
@@ -352,7 +373,7 @@ class AutoController:
                     timing_profile(obs, self.c, (now - obs.captured) * 1000, self.ack_bound_ms),
                 )
                 if not safe:
-                    self.stop("EXECUTION_WINDOW_EXCEEDED: " + why)
+                    self.execution_window_failed("EXECUTION_WINDOW_EXCEEDED: " + why, obs)
                     return
             if path and path[0] != "drop":
                 expected = advance(obs.fixed, obs.active.kind, obs.active.state, path[0])
@@ -520,10 +541,17 @@ class AutoController:
                 )
         if ok:
             latency = (now - w.sent) * 1000
-            self.ack_bound_ms = max(latency, self.ack_bound_ms * 0.95)
             w.hits += 1
             if action in ("hold", "drop") and w.hits < 2:
                 return
+            # Spawn/clear animations are not movement latency. Keep their
+            # measured bounds separate without relaxing per-key screen ACKs.
+            if action == "hold":
+                self.hold_ack_bound_ms = max(latency, self.hold_ack_bound_ms * 0.95)
+            elif action == "drop":
+                self.drop_ack_bound_ms = max(latency, self.drop_ack_bound_ms * 0.95)
+            else:
+                self.ack_bound_ms = max(latency, self.ack_bound_ms * 0.95)
             self.pulse.acknowledged(now, self.c["gap_ms"])
             if action in ("up", "z"):
                 old = before.active.state

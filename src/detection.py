@@ -1,7 +1,7 @@
 """OpenCV visual detector; window titles are never detection evidence."""
 
 import cv2, numpy as np
-from recognition import labels
+from recognition import labels, PreviewCache
 
 
 def components(rgb):
@@ -209,3 +209,27 @@ def refine_saved_regions(rgb, origin, config):
         if found[name]:
             result[name] = found[name]
     return result
+
+
+def refine_next_region(rgb, origin, config):
+    """Shrink a merged single NEXT ROI only after a complete first piece validates."""
+    if config.get("next_default_count", 1) != 1 or len(config["next_slots"]) != 1:
+        return {}
+    box = config["next_slots"][0]
+    if not box:
+        return {}
+    ox, oy = origin
+    x, y, r, b = (box[0] - ox, box[1] - oy, box[2] - ox, box[3] - oy)
+    if not (0 <= x < r <= rgb.shape[1] and 0 <= y < b <= rgb.shape[0]):
+        return {}
+    slots, inferred = split_next(rgb, [x, y, r, b], 1)
+    if inferred or not slots:
+        return {}
+    a, c, d, e = slots[0]
+    refined = [a + ox, c + oy, d + ox, e + oy]
+    if refined == box:
+        return {}
+    reading = PreviewCache().read("next0", rgb[c:e, a:d], 0, config["min_s"], config["min_v"])
+    if not reading.valid or not reading.kind or reading.confidence < config["confidence"]:
+        return {}
+    return {"next_slots": [refined]}

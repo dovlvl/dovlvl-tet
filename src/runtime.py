@@ -8,7 +8,7 @@ from planner import urgent_plan
 from strategy import position_score
 from strategy import auto_plan
 from openers import load_book, opener_plan
-from detection import panel_occluded, fit_grid, refine_saved_regions
+from detection import panel_occluded, fit_grid, refine_saved_regions, refine_next_region
 from windows import shifted, same_size
 from telemetry import Telemetry
 from timing import MotionTracker, search_budget, is_fresh
@@ -316,6 +316,7 @@ class Session:
         fps = 0
         grid_check = 0
         bad_grid = 0
+        next_refine_at = 0
         while not self.stop_event.is_set():
             begin = time.monotonic()
             f = self.frames.get()
@@ -338,6 +339,30 @@ class Session:
                 if revision != rev:
                     self.recognizer = Recognizer()
                     rev = revision
+                # Menus can hide the board on the first frame. Retry NEXT
+                # independently later, using only a verified first-piece ROI.
+                prior = self.observations.get()
+                if (
+                    self.windows
+                    and not c.get("opener_enabled", False)
+                    and begin >= next_refine_at
+                    and (not prior or not prior.nexts or not prior.nexts[0].valid)
+                ):
+                    next_refine_at = begin + 0.5
+                    refined = refine_next_region(rgb, box[:2], c)
+                    if refined:
+                        with self.lock:
+                            if revision != self.revision:
+                                continue
+                            self.controller.pulse.release_all()
+                            self.observations.put(None)
+                            c.update(refined, preview_verified=False, basic_auto_verified=False)
+                            self.c.update(refined, preview_verified=False, basic_auto_verified=False)
+                            self.controller.c.update(refined, preview_verified=False, basic_auto_verified=False)
+                            self.revision += 1
+                            revision = rev = self.revision
+                            self.recognizer.cache.invalidate()
+                        self.telemetry.record("preview_region_refined", seq=seq, next_slots=c["next_slots"])
                 x, y, r, b = c["board"]
                 ox, oy, _, _ = box
                 board_image = rgb[y - oy : b - oy, x - ox : r - ox]
@@ -508,7 +533,8 @@ class Session:
             budget_ms=adaptive_budget,
             timing=profile,
         )
-        if profile["calibrated"] and (o.fall_ms is not None and o.fall_ms < 600):
+        if ctl.urgent_requested or (profile["calibrated"] and (o.fall_ms is not None and o.fall_ms < 600)):
+            ctl.urgent_requested = False
             packet = urgent_plan(
                 o.fixed,
                 o.active.kind,
@@ -525,7 +551,7 @@ class Session:
             self.last_packet = packet
             self.telemetry.add("search_ms", self.search_ms)
             if packet["result"] is None:
-                ctl.stop("EXECUTION_WINDOW_EXCEEDED: no observed-state path can finish safely")
+                ctl.execution_window_failed("EXECUTION_WINDOW_EXCEEDED: no observed-state path can finish safely", o)
             else:
                 ctl.accept_plan(packet, o)
             return True
@@ -648,6 +674,7 @@ class Session:
                 and not self.warmup
                 and o
                 and o.valid
+                and o.seq > ctl.execution_retry_seq
                 and is_fresh(o, begin, self.c)
                 and self.previews_ready(o)
             ):
