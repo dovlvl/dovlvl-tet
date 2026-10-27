@@ -99,9 +99,12 @@
   - 원복 후 전체 153개 통과(간헐 실패 없음), 골든 8개 일치, Ruff 포맷 통과·진단 113 유지. 전체 diff 자기 검토: 진행 문서만 변경, 코드·기존 테스트·스냅샷 불변.
 - [x] C6 — 사유 코드 enum — 2026-10-27 / 153→153 통과, 골든 일치
   - 기존 사유 문구를 `ReasonCode`로 변환하는 공통 함수를 model에 두고 ui_status는 코드로 가림을 판단. 기존 문구·직렬화·분기 순서 유지, 신선도 경계와 오류·탐색·유효 상태를 포함한 224개 조합의 표시 결과가 기준과 동일. 전체 diff 자기 검토, Ruff 포맷 통과·진단 113 유지. 실제 입력 실행 안 함. 로그 `diagnostics/refactor_c6/`.
+  - 시간 의존 간헐 실패: 작업 후 `test_core.RecognitionTests.test_preview_cache_timestamp`만 1회 재실행 통과. 작업 전 실패 없음. 제한 시간·기대값 유지.
 
 ## 단계 D — 큰 함수/클래스 분리
-- [ ] D1 — gui.App 분리
+- [x] D1 — gui.App 분리 — 2026-10-27 / 153→153 통과, 골든 일치
+  - 설정·영역 편집·진단·프리뷰 창을 4개 mixin 모듈로 분리하고 데스크톱 RGB 캡처를 공통화. 기존 App 메서드 이름과 reset_verification 공개 경로 유지. 31개 메서드의 AST가 기준과 동일하며 캡처 두 호출의 배열 변환·좌표·반환 형식 유지. 새 모듈을 EXE 소스 검사 필수 목록에 추가(이번 작업에서 EXE 재빌드하지 않음).
+  - 전체 테스트·골든·Ruff 포맷 통과, 진단 113 유지, 시작 started=true/auto_running=false. 간헐 실패 없음. 추출 초기 Ruff 진단 1개 증가는 새 파일의 복수 import를 분리하여 해결. 전체 diff 자기 검토: 안전 조건·호출 순서·사용자 문구 유지, 기존 테스트·스냅샷 불변. 실제 입력 실행 안 함. 로그 `diagnostics/refactor_d1/`.
 - [ ] D2 — planner.plan 분리
 - [ ] D3 — Recognizer.process 분리
 - [ ] D4 — Session.control_loop 분리
