@@ -7,6 +7,47 @@ from queue import Queue, Empty, Full
 from paths import app_root
 
 
+def drop_waiting_for_pixels(observation, pending):
+    """Diagnostic classification only; never acknowledges an input."""
+    if pending is None or pending.action != "drop" or not observation.valid:
+        return False
+    if observation.seq <= pending.seq or observation.captured <= pending.sent:
+        return True
+    before = pending.before
+    if before.active is None:
+        return False
+    x, y, rotation = observation.active.state
+    bx, by, br = before.active.state
+    return (
+        observation.board_key == before.board_key
+        and observation.generation == before.generation
+        and observation.queue == before.queue
+        and observation.active.kind == before.active.kind
+        and (x, rotation) == (bx, br)
+        and y >= by
+    )
+
+
+def has_recognition_failure(observation, pending=None):
+    return not observation.valid or (
+        observation.prediction_match is False and not drop_waiting_for_pixels(observation, pending)
+    )
+
+
+def record_landing_mismatch(telemetry, pending, observation):
+    if (
+        telemetry
+        and pending.action == "drop"
+        and observation.prediction_match is False
+        and not pending.mismatch_logged
+        and not drop_waiting_for_pixels(observation, pending)
+    ):
+        telemetry.record(
+            "landing_mismatch", expected=pending.expected_board, observed=observation.fixed, seq=observation.seq
+        )
+        pending.mismatch_logged = True
+
+
 class Telemetry:
     def __init__(self, folder=None):
         self.samples = defaultdict(lambda: deque(maxlen=4096))

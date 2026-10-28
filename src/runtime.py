@@ -10,7 +10,7 @@ from strategy import auto_plan
 from openers import load_book, opener_plan
 from detection import panel_occluded, fit_grid, refine_saved_regions, refine_next_region
 from windows import shifted, same_size
-from telemetry import Telemetry
+from telemetry import Telemetry, has_recognition_failure
 from timing import MotionTracker, search_budget, is_fresh
 
 
@@ -455,7 +455,7 @@ class Session:
                 self.telemetry.add("frame_age_ms", (time.monotonic() - captured) * 1000)
                 if (
                     c.get("save_failure_frames", True)
-                    and (not o.valid or o.prediction_match is False)
+                    and has_recognition_failure(o, pending)
                     and begin - last_failure >= 1
                 ):
                     last_failure = begin

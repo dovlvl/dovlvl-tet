@@ -386,15 +386,17 @@ class Recognizer:
                     if base <= occupied:
                         options += identify(occupied - base, grid)
             if not options:
-                options = [(k, s) for k, s in components(grid) if (s[1] <= 2 and 2 <= s[0] <= 5) or len(occupied) == 4]
+                parts = components(grid)
                 if self.last_fixed is not None and self.last_active is not None:
                     legal = lock_successors(self.last_fixed, self.last_active.kind, self.last_active.state)
                     options = [
                         (k, s)
-                        for k, s in components(grid)
+                        for k, s in parts
                         if tuple(tuple(int((x, y) in occupied - cellset(k, s)) for x in range(10)) for y in range(20))
                         in legal
                     ]
+                else:
+                    options = [(k, s) for k, s in parts if (s[1] <= 2 and 2 <= s[0] <= 5) or len(occupied) == 4]
             unique = {cellset(k, s): (k, s) for k, s in options}
         return unique
 

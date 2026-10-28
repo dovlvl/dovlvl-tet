@@ -6,6 +6,7 @@ from planner import route_to, landings, BudgetExpired
 from timing import route_feasible, timing_profile, is_stale
 from scoring import ScoreState, award, tspin
 from model import Phase, PendingAction
+from telemetry import record_landing_mismatch
 
 
 class AutoController:
@@ -660,9 +661,7 @@ class AutoController:
             else:
                 self.phase = Phase.DECIDE
         else:
-            if self.telemetry and action == "drop" and obs.prediction_match is False and not w.mismatch_logged:
-                self.telemetry.record("landing_mismatch", expected=w.expected_board, observed=obs.fixed, seq=obs.seq)
-                w.mismatch_logged = True
+            record_landing_mismatch(self.telemetry, w, obs)
             w.hits = 0
             if action not in ("hold", "drop") and now - w.sent > self.c["ack_ms"] / 1000:
                 self.pulse.release_all()
