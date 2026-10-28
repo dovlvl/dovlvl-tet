@@ -179,8 +179,10 @@ def basic_candidates(
     ]
     if shortest_first:
         proposals.sort(key=lambda item: len(item[0]) + abs(item[1]))
-    for turn, offset in proposals:
-        if deadline is not None and perf_counter() >= deadline:
+    for index, (turn, offset) in enumerate(proposals):
+        # Always evaluate the direct drop once, even if setup used the tiny
+        # initial slice. Geometry and timing still reject an unsafe seed.
+        if index and deadline is not None and perf_counter() >= deadline:
             return list(results.values())
         path = turn + (("left",) * -offset if offset < 0 else ("right",) * offset)
         state = start
