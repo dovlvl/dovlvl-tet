@@ -193,6 +193,9 @@ def panel_occluded(rgb):
     hi = rgb.max(-1)
     lo = rgb.min(-1)
     mask = ((hi >= 32) & (hi < 200) & (hi.astype(int) - lo < 15)).astype(np.uint8)
+    # Disconnect thin grid lines before measuring neutral panels. Otherwise
+    # a narrow drop trail inherits the grid's full-board bounding rectangle.
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
     _, _, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
     height, width = rgb.shape[:2]
     return any(
