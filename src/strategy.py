@@ -40,14 +40,18 @@ def pc_position_score(board, lines):
     """Prefer removing cells and keeping every column low; no reserved well."""
     heights, holes, buried = metrics(board)
     height = max(heights)
+    center_height = max(heights[3:7])
     return (
         6 * lines
         - sum(map(sum, board))
         - 0.7 * sum(heights)
-        - 14 * holes
-        - buried
+        - 28 * holes
+        - 2 * buried
         - 2 * height
         - 1.5 * max(0, height - 4) ** 2
+        # Leave room below the shared spawn columns even before gravity is
+        # calibrated; execution_reserve adds the measured time cost separately.
+        - 2 * max(0, center_height - 6) ** 2
         - 0.4 * sum(abs(a - b) for a, b in zip(heights, heights[1:]))
     )
 
