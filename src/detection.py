@@ -22,6 +22,16 @@ def components(rgb):
     ]
 
 
+def profile_contrasts(profile, count, pad):
+    cell = (len(profile) - 2 * pad) / count
+    i = np.arange(1, count)
+    p = np.rint(pad + i * cell).astype(int)
+    c = np.rint(pad + (i - 0.5) * cell).astype(int)
+    band = max(1, round(cell * 0.07))
+    offsets = np.arange(-band, band + 1)
+    return (profile[p[:, None] + offsets].max(axis=1) - np.median(profile[c[:, None] + offsets], axis=1)).astype(float)
+
+
 def profile_fit(profile, count, ref_pad):
     n = len(profile)
     best = None
@@ -32,12 +42,7 @@ def profile_fit(profile, count, ref_pad):
         # Every band is interior: cell >= 7 and the half-cell margin is
         # larger than band. Batch the same max/median samples instead of
         # hundreds of small Python/NumPy calls on the confirmation path.
-        i = np.arange(1, count)
-        p = np.rint(pad + i * cell).astype(int)
-        c = np.rint(pad + (i - 0.5) * cell).astype(int)
-        band = max(1, round(cell * 0.07))
-        offsets = np.arange(-band, band + 1)
-        a = (profile[p[:, None] + offsets].max(axis=1) - np.median(profile[c[:, None] + offsets], axis=1)).astype(float)
+        a = profile_contrasts(profile, count, pad)
         fraction = float((a > 2).mean())
         score = fraction + 0.3 * min(1, float(np.maximum(a, 0).mean()) / 25) - abs(pad - ref_pad) * 0.001
         if best is None or score > best[0]:
@@ -51,6 +56,13 @@ def fit_grid(rgb, box):
     gray = cv2.cvtColor(crop, cv2.COLOR_RGB2GRAY).astype(np.float32)
     if min(gray.shape) < 60:
         return None
+    # A runtime probe already covers the saved interior; retain its coordinates
+    # when both axes have grid lines without a border to remove.
+    if list(box) == [0, 0, rgb.shape[1], rgb.shape[0]] and 0.46 <= gray.shape[1] / gray.shape[0] <= 0.54:
+        vertical = float((profile_contrasts(np.median(gray, axis=0), 10, 0) > 2).mean())
+        horizontal = float((profile_contrasts(np.median(gray, axis=1), 20, 0) > 2).mean())
+        if vertical >= 0.65 and horizontal >= 0.6:
+            return (vertical + horizontal) / 2, list(box)
     v = profile_fit(np.median(gray, axis=0), 10, (r - x) * 0.02)
     h = profile_fit(np.median(gray, axis=1), 20, (b - y) * 0.01)
     if not v or not h or v[2] < 0.65 or h[2] < 0.6:

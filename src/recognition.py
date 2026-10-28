@@ -318,6 +318,34 @@ class Recognizer:
     def reset(self):
         self.__init__()
 
+    def _restart_after_empty(self, grid, occupied, expected_fixed, confidence):
+        if (
+            expected_fixed is not None
+            or self.prev_grid is None
+            or self.prev_grid.any()
+            or self.board_cache is None
+            or self.board_cache[1].fixed_confidence < confidence
+            or self.last_fixed is None
+            or not any(map(any, self.last_fixed))
+            or len(occupied) != 4
+        ):
+            return
+        candidates = identify(occupied, grid)
+        if not candidates or not (2 <= candidates[0][1][0] <= 5 and candidates[0][1][1] <= 3):
+            return
+        # Only a trusted empty frame followed by a complete spawn can discard
+        # the old round's stack. Normal stability checks still confirm the spawn.
+        self.last_fixed = [[0] * 10 for _ in range(20)]
+        self.last_active = None
+        self.last_board = None
+        self.stable = 0
+        self.board_cache = None
+        self.bootstrap = None
+        self.tracking_initialized = False
+        self.generation += 1
+        self.transition = "round_reset"
+        self.cache.invalidate()
+
     def _active_candidates(self, grid, occupied, expected_fixed):
         candidates = []
         # Confirm a drop's predicted board against pixels; this is a hypothesis, never trusted blindly.
@@ -485,6 +513,8 @@ class Recognizer:
             return o
         grid, conf, ghost, invalid = sample_board(roi(config["board"]), config["min_s"], config["min_v"])
         occupied = {(int(x), int(y)) for y, x in np.argwhere(grid > 0)}
+        if not invalid and float(np.min(conf)) >= config["confidence"]:
+            self._restart_after_empty(grid, occupied, expected_fixed, config["confidence"])
         unique = self._active_candidates(grid, occupied, expected_fixed)
         active = None
         fixed = self.last_fixed or [[0] * 10 for _ in range(20)]
