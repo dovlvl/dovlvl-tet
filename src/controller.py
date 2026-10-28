@@ -7,6 +7,7 @@ from timing import route_feasible, timing_profile, is_stale
 from scoring import ScoreState, award, tspin
 from model import Phase, PendingAction
 from telemetry import record_landing_mismatch
+from ui_status import failure_limit_message
 
 
 class AutoController:
@@ -117,7 +118,7 @@ class AutoController:
             self.failures += 1
             self.block_failures += 1
         if self.failures >= 5 or self.block_failures >= 8:
-            self.stop("입력 확인 반복 실패 (연속 5회 / 블록당 8회): 조작 키/입력 길이/영역을 확인하세요.")
+            self.stop(failure_limit_message(reason))
 
     def accept_plan(self, packet, obs):
         if not self.running or self.pulse.abort.is_set() or not obs or not obs.active:

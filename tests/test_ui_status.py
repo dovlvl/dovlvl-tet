@@ -5,9 +5,19 @@ import bootstrap  # noqa: F401 -- configure source imports
 from config import DEFAULT
 from model import Reading
 from ui_status import summary
+import ui_status
 
 
 class StatusTests(unittest.TestCase):
+    def test_failure_limit_message_distinguishes_timing_without_showing_internal_tags(self):
+        text = ui_status.failure_limit_message("EXECUTION_WINDOW_EXCEEDED: NATURAL_LOCK_BEFORE_ACTION")
+        self.assertIn("시간", text)
+        self.assertIn("경로", text)
+        self.assertNotIn("EXECUTION_WINDOW", text)
+        self.assertNotIn("NATURAL_LOCK", text)
+        self.assertNotIn("조작 키", text)
+        self.assertIn("조작 키", ui_status.failure_limit_message("이동/회전 확인 실패"))
+
     def test_only_short_statuses_and_known_previews(self):
         t = time.monotonic()
         s = SimpleNamespace(error="", visibility_error="")

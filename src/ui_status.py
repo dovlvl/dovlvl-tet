@@ -4,6 +4,12 @@ import time
 from model import ReasonCode, reason_code
 
 
+def failure_limit_message(reason):
+    if reason.startswith("EXECUTION_WINDOW_EXCEEDED:"):
+        return "안전한 배치 시간·경로를 확인하지 못해 중지했습니다 (연속 5회 / 블록당 8회 한도)."
+    return "입력 확인 반복 실패 (연속 5회 / 블록당 8회): 조작 키/입력 길이/영역을 확인하세요."
+
+
 def summary(config, session, observation, searching=False, error=False, now=None):
     now = time.monotonic() if now is None else now
     fresh = bool(observation and 0 <= now - observation.captured < 0.6)
