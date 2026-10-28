@@ -2,7 +2,7 @@
 
 import time, zlib, colorsys, copy
 from functools import lru_cache
-from dataclasses import replace
+from dataclasses import dataclass, replace
 import numpy as np
 from model import Active, Reading, Observation
 from geometry import orientations, fits, settle, hard_drop
@@ -294,6 +294,30 @@ def _lock_successors(board, kind, state=None):
     return result
 
 
+@dataclass(frozen=True)
+class _RecognitionFrame:
+    seq: int
+    captured: float
+    now: float
+    capture_ms: float
+    begin: float
+
+
+@dataclass(frozen=True)
+class _PreviewReadings:
+    hold: Reading
+    nexts: list
+
+
+@dataclass(frozen=True)
+class _BoardReading:
+    fixed: list
+    active: Active
+    ghost: list
+    confidence: float
+    reason: str
+
+
 class Recognizer:
     def __init__(self):
         self.cache = PreviewCache()
@@ -450,22 +474,7 @@ class Recognizer:
         else:
             self.stable = 0
 
-    def process(self, rgb, bbox, config, seq, captured, capture_ms=0, expected_fixed=None):
-        begin = time.perf_counter()
-        now = time.monotonic()
-        ox, oy, _, _ = bbox
-        if seq <= self.last_seq:
-            raise ValueError("Out-of-order recognition frame")
-        self.last_seq = seq
-
-        def roi(box):
-            if box is None:
-                return None
-            x, y, r, b = box
-            if x < ox or y < oy or r > ox + rgb.shape[1] or b > oy + rgb.shape[0] or r <= x or b <= y:
-                return None
-            return rgb[y - oy : b - oy, x - ox : r - ox]
-
+    def _read_previews(self, roi, config, now):
         hold = self.cache.read("hold", roi(config["hold"]), now, config["min_s"], config["min_v"])
         nexts = [
             self.cache.read(f"next{i}", roi(box), now, config["min_s"], config["min_v"])
@@ -483,22 +492,19 @@ class Recognizer:
         self.next_stable = (self.next_stable + 1 if ns == self.next_signature else 1) if ns is not None else 0
         self.hold_signature = hs
         self.next_signature = ns
-        board_pixels = roi(config["board"])
-        fingerprint = (
-            board_pixels.shape,
-            zlib.adler32(np.ascontiguousarray(board_pixels)),
-            config["min_s"],
-            config["min_v"],
-            tuple(map(tuple, expected_fixed)) if expected_fixed is not None else None,
-        )
+        return _PreviewReadings(hold, nexts)
+
+    def _refresh_cached_board(self, fingerprint, frame, previews, config):
+        now = frame.now
+        hold, nexts = previews.hold, previews.nexts
         cached = self.board_cache
         if cached and cached[0] == fingerprint and cached[1].active and cached[1].confidence >= config["confidence"]:
             self.stable += 1
             active = replace(cached[1].active, updated=now)
             o = replace(
                 cached[1],
-                seq=seq,
-                captured=captured,
+                seq=frame.seq,
+                captured=frame.captured,
                 updated=now,
                 active=active,
                 stable=self.stable,
@@ -506,14 +512,66 @@ class Recognizer:
                 nexts=nexts,
                 hold_stable=self.hold_stable,
                 next_stable=self.next_stable,
-                capture_ms=capture_ms,
-                vision_ms=(time.perf_counter() - begin) * 1000,
+                capture_ms=frame.capture_ms,
+                vision_ms=(time.perf_counter() - frame.begin) * 1000,
                 fixed_updated=now,
             )
             self.last_active = active
             self.fixed_time = now
             return o
-        grid, conf, ghost, invalid = sample_board(roi(config["board"]), config["min_s"], config["min_v"])
+        return None
+
+    def _identify_active(self, board_pixels, grid, conf, ghost, unique, config, now):
+        cells, (kind, st) = next(iter(unique.items()))
+        ac = float(min(conf[y, x] for x, y in cells))
+        fixed = (grid > 0).astype(int)
+        for x, y in cells:
+            fixed[y, x] = 0
+        fixed = fixed.tolist()
+        confidence = min(ac, float(np.quantile(conf, 0.05)))
+        active = Active(kind, st, cells, ac, now, shape_rotations(kind, cells))
+        reason = ""
+        if not self.tracking_initialized and st[1] > 3 and not config.get("allow_stationary_bootstrap", False):
+            previous = self.bootstrap
+            current = (kind, tuple(map(tuple, fixed)), cells, st)
+            moving = previous and previous[0] == kind and previous[1] == current[1] and previous[2] != cells
+            self.bootstrap = current
+            if not moving:
+                confidence = 0
+                reason = "BOOTSTRAP_MOTION_REQUIRED: low stationary shape may be fixed blocks"
+            else:
+                self.tracking_initialized = True
+        else:
+            self.tracking_initialized = True
+        # Dim filled ghosts require both shape and exact drop geometry. If the
+        # skin is uncalibrated, reject rather than turn a shadow into a stack.
+        fixed, ghost, confidence, reason = self._filled_ghost(
+            board_pixels, grid, kind, st, cells, fixed, ghost, config, confidence, reason
+        )
+        # During movement/rotation the fixed board cannot change. A lock or
+        # hold has a spawn near the top; those transitions need stable frames.
+        if self.last_fixed is not None and fixed != self.last_fixed and self.last_active:
+            if tuple(map(tuple, fixed)) not in lock_successors(
+                self.last_fixed, self.last_active.kind, self.last_active.state
+            ):
+                confidence = 0
+                reason = "UNEXPLAINED_FIXED_CHANGE: no observed-piece lock explains pixels"
+        key = tuple(tuple(r) for r in fixed)
+        self.stable = self.stable + 1 if key == self.last_board else 1
+        self.last_board = key
+        if self.last_active and (
+            key != tuple(tuple(r) for r in (self.last_fixed or []))
+            or (st[1] <= 2 and self.last_active.state[1] > 3)
+            or kind != self.last_active.kind
+        ):
+            self.cache.invalidate()
+        self._update_generation(fixed, kind, st, active, confidence, config, now)
+        return _BoardReading(fixed, active, ghost, confidence, reason)
+
+    def _analyze_board(self, board_pixels, config, expected_fixed, frame, previews):
+        now = frame.now
+        hold, nexts = previews.hold, previews.nexts
+        grid, conf, ghost, invalid = sample_board(board_pixels, config["min_s"], config["min_v"])
         occupied = {(int(x), int(y)) for y, x in np.argwhere(grid > 0)}
         if not invalid and float(np.min(conf)) >= config["confidence"]:
             self._restart_after_empty(grid, occupied, expected_fixed, config["confidence"])
@@ -523,51 +581,9 @@ class Recognizer:
         confidence = 0
         reason = "현재 블록 대기 (시작/전환/판별 불가)"
         if len(unique) == 1 and not invalid:
-            cells, (kind, st) = next(iter(unique.items()))
-            ac = float(min(conf[y, x] for x, y in cells))
-            fixed = (grid > 0).astype(int)
-            for x, y in cells:
-                fixed[y, x] = 0
-            fixed = fixed.tolist()
-            confidence = min(ac, float(np.quantile(conf, 0.05)))
-            active = Active(kind, st, cells, ac, now, shape_rotations(kind, cells))
-            reason = ""
-            if not self.tracking_initialized and st[1] > 3 and not config.get("allow_stationary_bootstrap", False):
-                previous = self.bootstrap
-                current = (kind, tuple(map(tuple, fixed)), cells, st)
-                moving = previous and previous[0] == kind and previous[1] == current[1] and previous[2] != cells
-                self.bootstrap = current
-                if not moving:
-                    confidence = 0
-                    reason = "BOOTSTRAP_MOTION_REQUIRED: low stationary shape may be fixed blocks"
-                else:
-                    self.tracking_initialized = True
-            else:
-                self.tracking_initialized = True
-            # Dim filled ghosts require both shape and exact drop geometry. If the
-            # skin is uncalibrated, reject rather than turn a shadow into a stack.
-            board_rgb = roi(config["board"])
-            fixed, ghost, confidence, reason = self._filled_ghost(
-                board_rgb, grid, kind, st, cells, fixed, ghost, config, confidence, reason
-            )
-            # During movement/rotation the fixed board cannot change. A lock or
-            # hold has a spawn near the top; those transitions need stable frames.
-            if self.last_fixed is not None and fixed != self.last_fixed and self.last_active:
-                if tuple(map(tuple, fixed)) not in lock_successors(
-                    self.last_fixed, self.last_active.kind, self.last_active.state
-                ):
-                    confidence = 0
-                    reason = "UNEXPLAINED_FIXED_CHANGE: no observed-piece lock explains pixels"
-            key = tuple(tuple(r) for r in fixed)
-            self.stable = self.stable + 1 if key == self.last_board else 1
-            self.last_board = key
-            if self.last_active and (
-                key != tuple(tuple(r) for r in (self.last_fixed or []))
-                or (st[1] <= 2 and self.last_active.state[1] > 3)
-                or kind != self.last_active.kind
-            ):
-                self.cache.invalidate()
-            self._update_generation(fixed, kind, st, active, confidence, config, now)
+            reading = self._identify_active(board_pixels, grid, conf, ghost, unique, config, now)
+            fixed, active, ghost = reading.fixed, reading.active, reading.ghost
+            confidence, reason = reading.confidence, reading.reason
         else:
             self.stable = 0
         if not occupied and not invalid:
@@ -584,8 +600,8 @@ class Recognizer:
                 reason = "DROP_BOARD_MISMATCH: observed pixels disagree with prediction"
         self.prev_grid = grid.copy()
         result = Observation(
-            seq,
-            captured,
+            frame.seq,
+            frame.captured,
             now,
             fixed,
             active,
@@ -595,8 +611,8 @@ class Recognizer:
             confidence,
             self.stable,
             reason,
-            capture_ms,
-            (time.perf_counter() - begin) * 1000,
+            frame.capture_ms,
+            (time.perf_counter() - frame.begin) * 1000,
             raw=grid.tolist(),
             fixed_updated=self.fixed_time,
             fixed_confidence=confidence if active else (0.97 if not occupied and not invalid else 0),
@@ -608,5 +624,37 @@ class Recognizer:
             generation=self.generation,
             transition=self.transition,
         )
+        return result
+
+    def process(self, rgb, bbox, config, seq, captured, capture_ms=0, expected_fixed=None):
+        begin = time.perf_counter()
+        now = time.monotonic()
+        ox, oy, _, _ = bbox
+        if seq <= self.last_seq:
+            raise ValueError("Out-of-order recognition frame")
+        self.last_seq = seq
+
+        def roi(box):
+            if box is None:
+                return None
+            x, y, r, b = box
+            if x < ox or y < oy or r > ox + rgb.shape[1] or b > oy + rgb.shape[0] or r <= x or b <= y:
+                return None
+            return rgb[y - oy : b - oy, x - ox : r - ox]
+
+        frame = _RecognitionFrame(seq, captured, now, capture_ms, begin)
+        previews = self._read_previews(roi, config, now)
+        board_pixels = roi(config["board"])
+        fingerprint = (
+            board_pixels.shape,
+            zlib.adler32(np.ascontiguousarray(board_pixels)),
+            config["min_s"],
+            config["min_v"],
+            tuple(map(tuple, expected_fixed)) if expected_fixed is not None else None,
+        )
+        cached = self._refresh_cached_board(fingerprint, frame, previews, config)
+        if cached is not None:
+            return cached
+        result = self._analyze_board(board_pixels, config, expected_fixed, frame, previews)
         self.board_cache = (fingerprint, copy.copy(result))
         return result
